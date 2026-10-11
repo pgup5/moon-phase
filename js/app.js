@@ -3,7 +3,7 @@ import * as C from "./culture.js";
 import { initSky } from "./sky.js";
 import { createMoon, renderMoonImage } from "./moon3d.js";
 import { buildCard, shareOrDownload } from "./card.js";
-import { getLaunches } from "./launches.js";
+import { getLaunches, CATEGORIES } from "./launches.js";
 
 const LOC = "zh-TW";
 const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -246,42 +246,60 @@ for (const id of ["events", "festivals"]) {
   });
 }
 
-// ---------- SpaceX launches ----------
+// ---------- rocket launches ----------
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const PRECISE = ["SEC", "MIN", "HR"];
 function launchWhen(l) {
   const t = new Date(l.net);
-  if (["SEC", "MIN", "HR"].includes(l.precision)) return fmtShort(t) + (l.precision === "HR" ? " 左右" : "");
-  // Day/month-precision NETs are UTC midnights; converting them would shift the date.
-  if (l.precision === "DAY") return t.toLocaleDateString(LOC, { year: "numeric", month: "long", day: "numeric", weekday: "short", timeZone: "UTC" });
+  if (PRECISE.includes(l.precision)) return fmtShort(t) + (l.precision === "HR" ? " 左右" : "");
+  // Coarse NETs are UTC midnights at the end of the period; converting them would shift the date.
+  const y = t.getUTCFullYear(), p = l.precision;
+  if (p === "DAY") return t.toLocaleDateString(LOC, { year: "numeric", month: "long", day: "numeric", weekday: "short", timeZone: "UTC" });
+  if (/^Q\d$/.test(p)) return `${y}年第${p[1]}季`;
+  if (p === "H1" || p === "H2") return `${y}年${p === "H1" ? "上" : "下"}半年`;
+  if (p === "Y" || p === "FY") return `${y}年`;
   return t.toLocaleDateString(LOC, { year: "numeric", month: "long", timeZone: "UTC" });
 }
 function launchCountdown(l, now) {
   if (l.live) return "直播中";
   if (l.statusAbbrev === "In Flight") return "飛行中";
+  if (![...PRECISE, "DAY"].includes(l.precision)) return l.status;
   const ms = new Date(l.net) - now;
-  if (!["SEC", "MIN", "HR", "DAY"].includes(l.precision)) return l.status;
   if (ms <= 0) return `${l.status}・即將發射`;
   const h = ms / 3600000;
   const rel = h < 1 ? `${Math.max(1, Math.round(h * 60))} 分鐘後` : h < 48 ? `${Math.round(h)} 小時後` : `${Math.round(h / 24)} 天後`;
   return `${l.status}・${rel}`;
 }
 let launchData = null;
+let launchFilter = localStorage.getItem("moon.launchFilter") || "all";
 function renderLaunches() {
   if (!launchData) return;
   const now = new Date();
   const { launches, at, stale } = launchData;
-  $("launches").innerHTML = launches.length ? launches.map((l) => `<div class="item launch">
-      <span><b>${esc(l.mission)}</b><br><small>${esc([l.rocket, l.site, l.orbit].filter(Boolean).join("・"))}</small></span>
+  const counts = Object.fromEntries(CATEGORIES.map(([k]) => [k, k === "all" ? launches.length : launches.filter((l) => l.tags.includes(k)).length]));
+  if (!counts[launchFilter]) launchFilter = "all";
+  $("launchFilter").innerHTML = CATEGORIES.filter(([k]) => counts[k]).map(([k, name]) =>
+    `<button data-k="${k}" aria-pressed="${k === launchFilter}">${name} <small>${counts[k]}</small></button>`).join("");
+  const shown = launchFilter === "all" ? launches.slice(0, 12) : launches.filter((l) => l.tags.includes(launchFilter));
+  $("launches").innerHTML = shown.length ? shown.map((l) => `<div class="item launch">
+      <span><b>${esc(l.mission)}</b>${l.nasa && l.provider !== "NASA" ? ' <span class="badge">NASA</span>' : ""}<br><small>${esc([l.provider, l.rocket, l.site, l.orbit].filter(Boolean).join("・"))}</small></span>
       <span style="text-align:right">${esc(launchWhen(l))}<br><small>${esc(launchCountdown(l, now))}</small></span></div>`).join("")
     : '<div class="when">目前沒有已排定的發射</div>';
   $("launchSrc").dataset.updated = stale ? `（離線資料，更新於 ${fmtShort(new Date(at))}）` : "";
 }
+$("launchFilter").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-k]");
+  if (!b) return;
+  launchFilter = b.dataset.k;
+  localStorage.setItem("moon.launchFilter", launchFilter);
+  renderLaunches();
+});
 async function loadLaunches() {
   try {
     launchData = await getLaunches();
     renderLaunches();
   } catch (e) {
-    console.warn("SpaceX launches unavailable", e);
+    console.warn("Launch data unavailable", e);
     if (!launchData) $("launches").innerHTML = '<div class="when">暫時無法取得發射資料，請稍後再試</div>';
   }
 }

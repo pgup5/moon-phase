@@ -84,3 +84,8 @@ h2 small.muted { font-size:.75rem; font-weight:400; color:var(--muted); }
 .item.launch { flex-wrap:wrap; }
 .item.launch > span:first-child { flex:1 1 140px; min-width:0; }
 .item.launch > span:last-child { white-space:nowrap; margin-left:auto; }
+.filters { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
+.filters button { padding:3px 12px; border-radius:999px; font-size:.85rem; background:rgba(255,255,255,.04); border-color:var(--line); }
+.filters button small { color:var(--muted); }
+.filters button[aria-pressed="true"] { background:rgba(255,217,138,.18); border-color:var(--accent); color:var(--accent); }
+.item.launch .badge { font-size:.7rem; padding:0 7px; vertical-align:2px; }

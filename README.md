@@ -12,7 +12,7 @@ Live site: https://moon-phase-psi.vercel.app
 - Live sky background that follows the real Sun altitude, with parallax stars and shooting stars
 - Birthday moon share card (PNG, Web Share on mobile)
 - Supermoon / blue moon / eclipse forecasts, `.ics` full-moon reminders, installable PWA with offline support
-- Upcoming SpaceX launches in the visitor's local time zone ([Launch Library 2](https://thespacedevs.com/llapi), cached in `localStorage` for an hour because of the free 15 requests/hour limit)
+- Upcoming rocket launches worldwide (SpaceX, NASA, China, Japan, India, Europe, Russia …) with filter chips, in the visitor's local time zone ([Launch Library 2](https://thespacedevs.com/llapi), cached in `localStorage` for an hour because of the free 15 requests/hour limit)
 - `?t=2026-10-26T20:00` opens a specific moment
 
 ## Layout
