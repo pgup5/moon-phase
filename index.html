@@ -2,335 +2,134 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>月相查詢</title>
-<style>
-  :root { --bg1:#05060f; --bg2:#141a3a; --fg:#e8ecff; --muted:#9aa3c7; --accent:#ffd98a; --card:rgba(255,255,255,0.06); }
-  * { box-sizing:border-box; }
-  body { margin:0; min-height:100vh; font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--fg);
-         background:radial-gradient(ellipse at top,var(--bg2),var(--bg1) 70%); background-attachment:fixed; }
-  #stars { position:fixed; inset:0; z-index:0; pointer-events:none; }
-  main { position:relative; z-index:1; max-width:960px; margin:0 auto; padding:24px 16px 48px; }
-  h1 { text-align:center; font-weight:300; letter-spacing:.08em; margin:8px 0 4px; }
-  .clock { text-align:center; color:var(--muted); font-variant-numeric:tabular-nums; }
-  .tzline { text-align:center; margin-top:6px; } .tzline span { display:inline-block; background:var(--card); border:1px solid #3a4280; border-radius:12px; padding:4px 12px; font-size:.9rem; }
-  .hero { display:flex; flex-wrap:wrap; gap:32px; align-items:center; justify-content:center; margin:28px 0; }
-  .moon-wrap { width:280px; height:280px; filter:drop-shadow(0 0 40px rgba(255,236,190,.25)); }
-  .info { min-width:260px; }
-  .phase-name { font-size:2rem; color:var(--accent); margin:0 0 4px; }
-  .phase-emoji { font-size:1.6rem; }
-  .stats { display:grid; grid-template-columns:auto auto; gap:6px 18px; margin-top:12px; }
-  .stats span:nth-child(odd) { color:var(--muted); }
-  .stats span:nth-child(even) { font-variant-numeric:tabular-nums; }
-  .bar { height:8px; border-radius:4px; background:#2a3060; overflow:hidden; margin-top:14px; }
-  .bar > div { height:100%; background:linear-gradient(90deg,#8890c0,var(--accent)); }
-  .controls { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; align-items:center; background:var(--card);
-              padding:14px; border-radius:14px; }
-  .controls label { color:var(--muted); font-size:.9rem; }
-  input, select, button { font:inherit; color:var(--fg); background:#1c2248; border:1px solid #3a4280; border-radius:8px; padding:7px 10px; }
-  button { cursor:pointer; } button:hover { background:#2a3266; }
-  .live { font-size:.8rem; padding:3px 8px; border-radius:10px; background:#1f5a3a; color:#b8ffd5; }
-  .live.off { background:#5a3a1f; color:#ffd9b8; }
-  section.card { background:var(--card); border-radius:14px; padding:16px; margin-top:20px; }
-  section.card h2 { font-size:1.1rem; font-weight:500; margin:0 0 12px; }
-  .upcoming { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; }
-  .upcoming div { background:rgba(255,255,255,.04); border-radius:10px; padding:10px; }
-  .upcoming b { display:block; color:var(--accent); font-weight:500; }
-  .upcoming small { color:var(--muted); }
-  .cal-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
-  .cal { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
-  .cal .dow { text-align:center; color:var(--muted); font-size:.8rem; }
-  .cal .day { text-align:center; padding:6px 2px; border-radius:8px; background:rgba(255,255,255,.03); cursor:pointer; font-size:.8rem; }
-  .cal .day:hover { background:rgba(255,255,255,.1); }
-  .cal .day.today { outline:1px solid var(--accent); }
-  .cal .day.sel { background:rgba(255,217,138,.18); }
-  .cal .day svg { display:block; margin:4px auto 0; width:28px; height:28px; }
-  .cal .day.major span.tag { display:block; font-size:.65rem; color:var(--accent); }
-  footer { text-align:center; color:var(--muted); font-size:.8rem; margin-top:24px; }
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>月相查詢 · 今晚的月亮</title>
+<meta name="description" content="依您的時間與位置，即時顯示真實的 3D 月相、月出月落、節氣節日與天象。">
+<meta name="theme-color" content="#0a0d24">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta property="og:title" content="月相查詢 · 今晚的月亮">
+<meta property="og:description" content="真實 3D 月亮、月出月落、節氣節日、生日月亮卡片">
+<meta property="og:image" content="icons/icon-512.png">
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<canvas id="stars"></canvas>
+<canvas id="sky" aria-hidden="true"></canvas>
 <main>
   <h1>月相查詢</h1>
-  <div class="clock" id="clock"></div>
-  <div class="tzline"><span id="tzInfo"></span></div>
+  <div class="sub" id="clock"></div>
+  <div class="center"><span class="chip" id="tzInfo"></span></div>
+  <div class="banner" id="banner" hidden></div>
 
-  <div class="hero">
-    <div class="moon-wrap" id="moonBig"></div>
-    <div class="info">
-      <p class="phase-name"><span id="phaseName"></span> <span class="phase-emoji" id="phaseEmoji"></span></p>
-      <div id="forWhen" style="color:var(--muted)"></div>
+  <section class="hero">
+    <div>
+      <div class="moon-stage" id="moonStage"><div class="glow"></div></div>
+      <div class="hint" id="moonHint">拖曳可轉動月球 · 放開後回到今晚真實的樣子</div>
+    </div>
+    <div>
+      <p class="phase"><span id="phaseName"></span><small id="phaseAlias"></small></p>
+      <div class="when" id="forWhen"></div>
+      <div class="when" id="lunarLine"></div>
+      <div class="badges" id="badges"></div>
       <div class="bar"><div id="illumBar"></div></div>
       <div class="stats">
         <span>照明比例</span><span id="illum"></span>
         <span>月齡</span><span id="age"></span>
         <span>週期進度</span><span id="cycle"></span>
         <span>地月距離</span><span id="dist"></span>
+        <span>目前節氣</span><span id="term"></span>
+      </div>
+      <blockquote class="poem" id="poem"></blockquote>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>時光旅行 <span class="live" id="liveTag">即時</span><span class="spacer"></span>
+      <button id="nowBtn">回到現在</button></h2>
+    <div class="row">
+      <label for="dt">日期與時間</label><input type="datetime-local" id="dt">
+      <label for="hemi">半球</label>
+      <select id="hemi"><option value="N">北半球</option><option value="S">南半球</option></select>
+    </div>
+    <div class="slider-wrap">
+      <div class="row">
+        <button id="playBtn" aria-label="播放">▶ 播放</button>
+        <select id="speed" aria-label="速度"><option value="1">1 天/秒</option><option value="3" selected>3 天/秒</option><option value="7">7 天/秒</option></select>
+        <span class="offset" id="offsetLabel">±0</span>
+      </div>
+      <input type="range" id="slider" min="-720" max="720" step="1" value="0" aria-label="時間偏移（小時）">
+      <div class="slider-labels"><span>−30 天</span><span>拖曳看月亮盈虧</span><span>+30 天</span></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>月亮在哪裡？<span class="spacer"></span>
+      <button id="locBtn">📍 使用我的位置</button><button id="compassBtn" hidden>🧭 啟用指南針</button></h2>
+    <div class="where">
+      <svg class="compass" id="compass" viewBox="0 0 220 220" aria-label="月亮方位"></svg>
+      <div>
+        <div class="when" id="locName"></div>
+        <div class="stats" style="margin-top:8px">
+          <span>月亮方位</span><span id="moonAz"></span>
+          <span>月亮高度</span><span id="moonAlt"></span>
+          <span>月出</span><span id="moonRise"></span>
+          <span>月落</span><span id="moonSet"></span>
+          <span>日出 / 日落</span><span id="sunRS"></span>
+        </div>
+        <div class="when" id="visTip" style="margin-top:8px"></div>
       </div>
     </div>
-  </div>
-
-  <div class="controls">
-    <label for="dt">日期與時間</label>
-    <input type="datetime-local" id="dt">
-    <button id="nowBtn">現在</button>
-    <label for="hemi">半球</label>
-    <select id="hemi"><option value="N">北半球</option><option value="S">南半球</option></select>
-    <span class="live" id="liveTag">即時</span>
-  </div>
+  </section>
 
   <section class="card">
     <h2>即將到來的主要月相</h2>
     <div class="upcoming" id="upcoming"></div>
   </section>
 
-  <section class="card">
-    <div class="cal-head">
-      <button id="prevM">&larr;</button>
-      <h2 id="calTitle" style="margin:0"></h2>
-      <button id="nextM">&rarr;</button>
+  <section class="card grid2">
+    <div>
+      <h2>天象預告（未來一年）</h2>
+      <div class="list" id="events"></div>
     </div>
+    <div>
+      <h2>節氣與節日</h2>
+      <div class="list" id="festivals"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="cal-head"><button id="prevM" aria-label="上個月">←</button><h2 id="calTitle" style="margin:0"></h2><button id="nextM" aria-label="下個月">→</button></div>
     <div class="cal" id="cal"></div>
   </section>
 
-  <footer>依天文演算法（Meeus）於瀏覽器內計算。所有時間均以您的當地時區顯示（<span id="tz"></span>）。</footer>
+  <section class="card">
+    <h2>🎂 生日月亮卡片</h2>
+    <p class="when" style="margin-top:0">選一個特別的日子，看看那一晚的月亮，產生可分享的卡片。</p>
+    <div class="row">
+      <input type="date" id="cardDate" aria-label="日期">
+      <input type="text" id="cardTitle" placeholder="例如：我的生日" maxlength="16" aria-label="標題">
+      <button class="primary" id="cardBtn">產生卡片</button>
+    </div>
+    <div class="card-out" id="cardOut">
+      <img id="cardImg" alt="月亮卡片">
+      <div class="row" style="justify-content:center;margin-top:10px"><button class="primary" id="shareBtn">分享 / 下載</button></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>提醒與安裝</h2>
+    <div class="row">
+      <button id="icsBtn">📅 加到行事曆（未來一年滿月）</button>
+      <button id="installBtn" hidden>📲 安裝 App</button>
+      <span class="when" id="installHint"></span>
+    </div>
+  </section>
+
+  <footer>依 Jean Meeus《天文演算法》於瀏覽器內計算 · 月球影像：NASA LRO / SVS CGI Moon Kit<br>
+    所有時間以您的當地時區顯示（<span id="tz"></span>）· <a href="https://github.com/pgup5/moon-phase">原始碼</a></footer>
 </main>
-
-<script>
-// ---------- Astronomy ----------
-const SYNODIC = 29.530588853;
-const rad = d => d * Math.PI / 180;
-const norm = d => ((d % 360) + 360) % 360;
-
-function julianDay(date) { return date.getTime() / 86400000 + 2440587.5; }
-
-// Returns { elong (0..360, Moon-Sun ecliptic longitude difference), illum (0..1), distKm }
-function moonState(date) {
-  const T = (julianDay(date) - 2451545.0) / 36525;
-  // Sun
-  const L0 = 280.46646 + 36000.76983 * T + 0.0003032 * T * T;
-  const M  = 357.52911 + 35999.05029 * T - 0.0001537 * T * T;
-  const C  = (1.914602 - 0.004817 * T) * Math.sin(rad(M)) + (0.019993 - 0.000101 * T) * Math.sin(rad(2 * M)) + 0.000289 * Math.sin(rad(3 * M));
-  const sunLon = L0 + C;
-  // Moon
-  const Lp = 218.3164477 + 481267.88123421 * T;
-  const D  = 297.8501921 + 445267.1114034 * T;
-  const Mp = 134.9633964 + 477198.8675055 * T;
-  const F  = 93.2720950 + 483202.0175233 * T;
-  const E  = 1 - 0.002516 * T;
-  const s = (a) => Math.sin(rad(a)), c = (a) => Math.cos(rad(a));
-  const moonLon = Lp
-    + 6.288774 * s(Mp) + 1.274027 * s(2*D - Mp) + 0.658314 * s(2*D) + 0.213618 * s(2*Mp)
-    - 0.185116 * E * s(M) - 0.114332 * s(2*F) + 0.058793 * s(2*D - 2*Mp) + 0.057066 * E * s(2*D - M - Mp)
-    + 0.053322 * s(2*D + Mp) + 0.045758 * E * s(2*D - M) - 0.040923 * E * s(M - Mp) - 0.034720 * s(D)
-    - 0.030383 * E * s(M + Mp) + 0.015327 * s(2*D - 2*F) - 0.012528 * s(Mp + 2*F) + 0.010980 * s(Mp - 2*F)
-    + 0.010675 * s(4*D - Mp) + 0.010034 * s(3*Mp) + 0.008548 * s(4*D - 2*Mp) - 0.007888 * E * s(2*D + M - Mp)
-    - 0.006766 * E * s(2*D + M) - 0.005163 * s(D - Mp) + 0.004987 * E * s(D + M) + 0.004036 * E * s(2*D - M + Mp);
-  const distKm = 385000.56
-    - 20905.355 * c(Mp) - 3699.111 * c(2*D - Mp) - 2955.968 * c(2*D) - 569.925 * c(2*Mp)
-    + 48.888 * E * c(M) - 3.149 * c(2*F) + 246.158 * c(2*D - 2*Mp) - 152.138 * E * c(2*D - M - Mp)
-    - 170.733 * c(2*D + Mp) - 204.586 * E * c(2*D - M) - 129.620 * E * c(M - Mp) + 108.743 * c(D)
-    + 104.755 * E * c(M + Mp);
-  const elong = norm(moonLon - sunLon);
-  // Phase angle (Meeus 48.4) for illuminated fraction
-  const i = 180 - D - 6.289 * s(Mp) + 2.100 * s(M) - 1.274 * s(2*D - Mp) - 0.658 * s(2*D) - 0.214 * s(2*Mp) - 0.110 * s(D);
-  const illum = (1 + Math.cos(rad(i))) / 2;
-  return { elong, illum, distKm };
-}
-
-const PHASES = [
-  { name: "新月（朔）",        emoji: "\u{1F311}" },
-  { name: "眉月", emoji: "\u{1F312}" },
-  { name: "上弦月",   emoji: "\u{1F313}" },
-  { name: "盈凸月",  emoji: "\u{1F314}" },
-  { name: "滿月（望）",       emoji: "\u{1F315}" },
-  { name: "虧凸月",  emoji: "\u{1F316}" },
-  { name: "下弦月",    emoji: "\u{1F317}" },
-  { name: "殘月", emoji: "\u{1F318}" },
-];
-const S_EMOJI = ["\u{1F311}","\u{1F318}","\u{1F317}","\u{1F316}","\u{1F315}","\u{1F314}","\u{1F313}","\u{1F312}"];
-
-// Principal phases are "exact" moments; within ~±12h of them we label the day with that phase.
-function phaseIndex(elong) {
-  const w = 6.1; // ≈ 12 hours of elongation motion
-  if (elong < w || elong >= 360 - w) return 0;
-  if (Math.abs(elong - 90) < w) return 2;
-  if (Math.abs(elong - 180) < w) return 4;
-  if (Math.abs(elong - 270) < w) return 6;
-  if (elong < 90) return 1;
-  if (elong < 180) return 3;
-  if (elong < 270) return 5;
-  return 7;
-}
-
-// Find next time the elongation reaches `target` degrees after `from`.
-function nextPhaseTime(from, target) {
-  const diff = t => { let d = norm(moonState(t).elong - target); return d > 180 ? d - 360 : d; };
-  let t0 = new Date(from.getTime()), d0 = diff(t0);
-  const step = 6 * 3600 * 1000;
-  for (let k = 0; k < 130; k++) {
-    const t1 = new Date(t0.getTime() + step), d1 = diff(t1);
-    if (d0 < 0 && d1 >= 0) {
-      let a = t0.getTime(), b = t1.getTime();
-      for (let j = 0; j < 40; j++) { const m = (a + b) / 2; if (diff(new Date(m)) < 0) a = m; else b = m; }
-      return new Date((a + b) / 2);
-    }
-    t0 = t1; d0 = d1;
-  }
-  return null;
-}
-
-// ---------- Rendering ----------
-function moonSVG(elong, illum, size, southern, detailed) {
-  const r = size / 2 - (detailed ? 4 : 1), cx = size / 2, cy = size / 2;
-  let waxing = elong < 180;
-  if (southern) waxing = !waxing;
-  const k = illum;
-  const rx = r * Math.abs(1 - 2 * k);
-  const top = `${cx} ${cy - r}`, bot = `${cx} ${cy + r}`;
-  let d;
-  if (waxing) { // lit on the right
-    d = `M ${top} A ${r} ${r} 0 0 1 ${bot} A ${rx} ${r} 0 0 ${k < 0.5 ? 0 : 1} ${top} Z`;
-  } else {      // lit on the left
-    d = `M ${top} A ${r} ${r} 0 0 0 ${bot} A ${rx} ${r} 0 0 ${k < 0.5 ? 1 : 0} ${top} Z`;
-  }
-  const id = "m" + Math.random().toString(36).slice(2, 8);
-  const craters = detailed ? [
-    [0.30,-0.35,0.16],[ -0.25,-0.20,0.22],[0.10,0.30,0.18],[-0.40,0.35,0.12],[0.45,0.10,0.10],
-    [-0.05,-0.55,0.08],[0.25,0.60,0.07],[-0.60,-0.05,0.09],[0.55,-0.50,0.06],[-0.15,0.05,0.10]
-  ].map(([x,y,s]) => `<circle cx="${cx + x*r}" cy="${cy + y*r}" r="${s*r}" fill="#b9b3a2" opacity=".55"/>`).join("") : "";
-  return `<svg viewBox="0 0 ${size} ${size}" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <radialGradient id="${id}g" cx="40%" cy="38%" r="70%"><stop offset="0" stop-color="#fffaf0"/><stop offset="1" stop-color="#d8d1bf"/></radialGradient>
-      <clipPath id="${id}c"><path d="${d}"/></clipPath>
-    </defs>
-    <circle cx="${cx}" cy="${cy}" r="${r}" fill="#1b1e33" stroke="#2c3155" stroke-width="${detailed ? 1.5 : 0.8}"/>
-    <g clip-path="url(#${id}c)">
-      <circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#${id}g)"/>${craters}
-    </g>
-  </svg>`;
-}
-
-// ---------- UI ----------
-const $ = id => document.getElementById(id);
-let live = true, selected = new Date(), calMonth = new Date(selected.getFullYear(), selected.getMonth(), 1);
-const pad = n => String(n).padStart(2, "0");
-const toLocalInput = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-const LOC = "zh-TW";
-const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
-const fmt = d => d.toLocaleString(LOC, { year:"numeric", month:"long", day:"numeric", weekday:"short", hour:"2-digit", minute:"2-digit", hour12:false });
-const lunar = d => { try { return new Intl.DateTimeFormat("zh-TW-u-ca-chinese", { month:"long", day:"numeric" }).format(d); } catch (e) { return ""; } };
-function tzText(d) {
-  const off = -d.getTimezoneOffset(), sign = off >= 0 ? "+" : "-", a = Math.abs(off);
-  const name = (new Intl.DateTimeFormat(LOC, { timeZoneName:"long" }).formatToParts(d).find(p => p.type === "timeZoneName") || {}).value || "";
-  return `${TZ}｜${name}｜UTC${sign}${pad(Math.floor(a / 60))}:${pad(a % 60)}`;
-}
-const southern = () => $("hemi").value === "S";
-
-function renderMain() {
-  const st = moonState(selected);
-  const idx = phaseIndex(st.elong);
-  $("moonBig").innerHTML = moonSVG(st.elong, st.illum, 300, southern(), true);
-  $("phaseName").textContent = PHASES[idx].name;
-  $("phaseEmoji").textContent = southern() ? S_EMOJI[idx] : PHASES[idx].emoji;
-  $("forWhen").textContent = (live ? "目前時間：" : "查詢時間：") + fmt(selected) + (lunar(selected) ? `（農曆${lunar(selected)}）` : "");
-  $("illum").textContent = (st.illum * 100).toFixed(1) + "%";
-  $("illumBar").style.width = (st.illum * 100).toFixed(1) + "%";
-  const lastNew = nextPhaseTime(new Date(selected.getTime() - 31 * 86400000), 0);
-  let prevNew = lastNew, n;
-  while ((n = nextPhaseTime(new Date(prevNew.getTime() + 86400000), 0)) && n <= selected) prevNew = n;
-  const ageDays = (selected - prevNew) / 86400000;
-  $("age").textContent = ageDays.toFixed(2) + " 天";
-  $("cycle").textContent = (st.elong / 360 * 100).toFixed(1) + "%";
-  $("dist").textContent = Math.round(st.distKm).toLocaleString(LOC) + " 公里";
-  $("dt").value = toLocalInput(selected);
-  $("liveTag").textContent = live ? "即時" : "自訂時間";
-  $("liveTag").className = "live" + (live ? "" : " off");
-}
-
-let upcomingKey = "";
-function renderUpcoming() {
-  const key = Math.floor(selected.getTime() / 600000) + southern();
-  if (key === upcomingKey) return; upcomingKey = key;
-  const items = [[0,0],[90,2],[180,4],[270,6]].map(([deg, idx]) => ({ idx, t: nextPhaseTime(selected, deg) }))
-    .sort((a, b) => a.t - b.t);
-  $("upcoming").innerHTML = items.map(({ idx, t }) => {
-    const days = (t - selected) / 86400000;
-    const emoji = southern() ? S_EMOJI[idx] : PHASES[idx].emoji;
-    return `<div><b>${emoji} ${PHASES[idx].name}</b>${fmt(t)}<br><small>${days.toFixed(1)} 天後</small></div>`;
-  }).join("");
-}
-
-function renderCalendar() {
-  const y = calMonth.getFullYear(), m = calMonth.getMonth();
-  $("calTitle").textContent = calMonth.toLocaleString(LOC, { month: "long", year: "numeric" });
-  const first = new Date(y, m, 1), days = new Date(y, m + 1, 0).getDate();
-  const today = new Date();
-  // principal phase moments in this month -> day labels
-  const tags = {};
-  for (const [deg, idx] of [[0,0],[90,2],[180,4],[270,6]]) {
-    let t = nextPhaseTime(new Date(y, m, 1), deg);
-    while (t && t < new Date(y, m + 1, 1)) {
-      tags[t.getDate()] = ["新月","","上弦","","滿月","","下弦"][idx];
-      t = nextPhaseTime(new Date(t.getTime() + 86400000), deg);
-    }
-  }
-  let html = ["日","一","二","三","四","五","六"].map(d => `<div class="dow">${d}</div>`).join("");
-  for (let i = 0; i < first.getDay(); i++) html += "<div></div>";
-  for (let d = 1; d <= days; d++) {
-    const noon = new Date(y, m, d, 12);
-    const st = moonState(noon);
-    const cls = ["day"];
-    if (d === today.getDate() && m === today.getMonth() && y === today.getFullYear()) cls.push("today");
-    if (d === selected.getDate() && m === selected.getMonth() && y === selected.getFullYear()) cls.push("sel");
-    if (tags[d]) cls.push("major");
-    html += `<div class="${cls.join(" ")}" data-d="${d}" title="${PHASES[phaseIndex(st.elong)].name} – ${(st.illum*100).toFixed(0)}%">${d}${moonSVG(st.elong, st.illum, 40, southern(), false)}${tags[d] ? `<span class="tag">${tags[d]}</span>` : ""}</div>`;
-  }
-  $("cal").innerHTML = html;
-}
-
-function renderAll() { renderMain(); renderUpcoming(); renderCalendar(); }
-
-function tick() {
-  const now = new Date();
-  $("clock").textContent = now.toLocaleString(LOC, { dateStyle: "full", timeStyle: "medium", hour12: false });
-  $("tzInfo").textContent = "您的時區：" + tzText(now);
-  if (live) { selected = now; renderMain(); renderUpcoming(); }
-}
-
-$("dt").addEventListener("change", e => {
-  if (!e.target.value) return;
-  live = false; selected = new Date(e.target.value);
-  calMonth = new Date(selected.getFullYear(), selected.getMonth(), 1);
-  upcomingKey = ""; renderAll();
-});
-$("nowBtn").onclick = () => { live = true; selected = new Date(); calMonth = new Date(selected.getFullYear(), selected.getMonth(), 1); upcomingKey = ""; renderAll(); };
-$("hemi").onchange = () => { upcomingKey = ""; renderAll(); };
-$("prevM").onclick = () => { calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() - 1, 1); renderCalendar(); };
-$("nextM").onclick = () => { calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() + 1, 1); renderCalendar(); };
-$("cal").addEventListener("click", e => {
-  const cell = e.target.closest(".day"); if (!cell) return;
-  live = false;
-  selected = new Date(calMonth.getFullYear(), calMonth.getMonth(), +cell.dataset.d, 21, 0);
-  upcomingKey = ""; renderAll();
-});
-$("tz").textContent = TZ;
-
-// Starfield
-(function stars() {
-  const c = $("stars"), x = c.getContext("2d");
-  const draw = () => {
-    c.width = innerWidth; c.height = innerHeight; x.clearRect(0, 0, c.width, c.height);
-    for (let i = 0; i < 220; i++) {
-      x.fillStyle = `rgba(255,255,255,${Math.random() * 0.7 + 0.1})`;
-      x.beginPath(); x.arc(Math.random() * c.width, Math.random() * c.height, Math.random() * 1.2, 0, 7); x.fill();
-    }
-  };
-  draw(); addEventListener("resize", draw);
-})();
-
-renderAll(); tick(); setInterval(tick, 1000);
-</script>
+<div class="toast" id="toast"></div>
+<script type="module" src="js/app.js"></script>
 </body>
 </html>
