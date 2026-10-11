@@ -253,7 +253,7 @@ function launchWhen(l) {
   if (["SEC", "MIN", "HR"].includes(l.precision)) return fmtShort(t) + (l.precision === "HR" ? " 左右" : "");
   // Day/month-precision NETs are UTC midnights; converting them would shift the date.
   if (l.precision === "DAY") return t.toLocaleDateString(LOC, { year: "numeric", month: "long", day: "numeric", weekday: "short", timeZone: "UTC" });
-  return t.toLocaleDateString(LOC, { year: "numeric", month: "long", timeZone: "UTC" }) + "（日期未定）";
+  return t.toLocaleDateString(LOC, { year: "numeric", month: "long", timeZone: "UTC" });
 }
 function launchCountdown(l, now) {
   if (l.live) return "直播中";

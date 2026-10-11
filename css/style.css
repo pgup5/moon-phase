@@ -81,4 +81,6 @@ footer a { color:var(--muted); }
 .src a { color:var(--muted); }
 .src::after { content:attr(data-updated); }
 h2 small.muted { font-size:.75rem; font-weight:400; color:var(--muted); }
-.item.launch > span:last-child { white-space:nowrap; flex-shrink:0; }
+.item.launch { flex-wrap:wrap; }
+.item.launch > span:first-child { flex:1 1 140px; min-width:0; }
+.item.launch > span:last-child { white-space:nowrap; margin-left:auto; }
