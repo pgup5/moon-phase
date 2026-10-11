@@ -3,6 +3,7 @@ import * as C from "./culture.js";
 import { initSky } from "./sky.js";
 import { createMoon, renderMoonImage } from "./moon3d.js";
 import { buildCard, shareOrDownload } from "./card.js";
+import { getLaunches } from "./launches.js";
 
 const LOC = "zh-TW";
 const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -244,6 +245,50 @@ for (const id of ["events", "festivals"]) {
     scrollTo({ top: 0, behavior: "smooth" });
   });
 }
+
+// ---------- SpaceX launches ----------
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+function launchWhen(l) {
+  const t = new Date(l.net);
+  if (["SEC", "MIN", "HR"].includes(l.precision)) return fmtShort(t) + (l.precision === "HR" ? " 左右" : "");
+  // Day/month-precision NETs are UTC midnights; converting them would shift the date.
+  if (l.precision === "DAY") return t.toLocaleDateString(LOC, { year: "numeric", month: "long", day: "numeric", weekday: "short", timeZone: "UTC" });
+  return t.toLocaleDateString(LOC, { year: "numeric", month: "long", timeZone: "UTC" }) + "（日期未定）";
+}
+function launchCountdown(l, now) {
+  if (l.live) return "直播中";
+  if (l.statusAbbrev === "In Flight") return "飛行中";
+  const ms = new Date(l.net) - now;
+  if (!["SEC", "MIN", "HR", "DAY"].includes(l.precision)) return l.status;
+  if (ms <= 0) return `${l.status}・即將發射`;
+  const h = ms / 3600000;
+  const rel = h < 1 ? `${Math.max(1, Math.round(h * 60))} 分鐘後` : h < 48 ? `${Math.round(h)} 小時後` : `${Math.round(h / 24)} 天後`;
+  return `${l.status}・${rel}`;
+}
+let launchData = null;
+function renderLaunches() {
+  if (!launchData) return;
+  const now = new Date();
+  const { launches, at, stale } = launchData;
+  $("launches").innerHTML = launches.length ? launches.map((l) => `<div class="item launch">
+      <span><b>${esc(l.mission)}</b><br><small>${esc([l.rocket, l.site, l.orbit].filter(Boolean).join("・"))}</small></span>
+      <span style="text-align:right">${esc(launchWhen(l))}<br><small>${esc(launchCountdown(l, now))}</small></span></div>`).join("")
+    : '<div class="when">目前沒有已排定的發射</div>';
+  $("launchSrc").dataset.updated = stale ? `（離線資料，更新於 ${fmtShort(new Date(at))}）` : "";
+}
+async function loadLaunches() {
+  try {
+    launchData = await getLaunches();
+    renderLaunches();
+  } catch (e) {
+    console.warn("SpaceX launches unavailable", e);
+    if (!launchData) $("launches").innerHTML = '<div class="when">暫時無法取得發射資料，請稍後再試</div>';
+  }
+}
+$("launchTz").textContent = `以您的時區顯示：${TZ}`;
+loadLaunches();
+setInterval(renderLaunches, 60000);
+setInterval(loadLaunches, 15 * 60000);
 
 // ---------- calendar ----------
 function renderCalendar(d) {

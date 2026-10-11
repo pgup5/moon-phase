@@ -77,3 +77,8 @@ input[type=range] { width:100%; padding:0; background:transparent; border:none; 
 .rabbit { position:fixed; z-index:9; width:90px; pointer-events:none; filter:drop-shadow(0 0 12px rgba(255,255,255,.8)); }
 footer { text-align:center; color:var(--muted); font-size:.8rem; margin-top:28px; }
 footer a { color:var(--muted); }
+.src { margin:10px 0 0; font-size:.75rem; color:var(--muted); }
+.src a { color:var(--muted); }
+.src::after { content:attr(data-updated); }
+h2 small.muted { font-size:.75rem; font-weight:400; color:var(--muted); }
+.item.launch > span:last-child { white-space:nowrap; flex-shrink:0; }
