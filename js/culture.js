@@ -44,14 +44,15 @@ const DAY_NAMES = ["初一","初二","初三","初四","初五","初六","初七
   "十一","十二","十三","十四","十五","十六","十七","十八","十九","二十",
   "廿一","廿二","廿三","廿四","廿五","廿六","廿七","廿八","廿九","三十"];
 const MONTH_NAMES = ["正","二","三","四","五","六","七","八","九","十","冬","臘"];
-const ANIMALS = { 子:"鼠",丑:"牛",寅:"虎",卯:"兔",辰:"龍",巳:"蛇",午:"馬",未:"羊",申:"猴",酉:"雞",戌:"狗",亥:"豬" };
+const STEMS = "甲乙丙丁戊己庚辛壬癸";
+const BRANCHES = "子丑寅卯辰巳午未申酉戌亥";
+const ANIMALS = "鼠牛虎兔龍蛇馬羊猴雞狗豬";
 
 import { nextPhaseTime } from "./astro.js";
 
-let fmtNum, fmtZh;
+let fmtNum;
 try {
   fmtNum = new Intl.DateTimeFormat("en-u-ca-chinese", { year: "numeric", month: "numeric", day: "numeric", timeZone: "Asia/Shanghai" });
-  fmtZh = new Intl.DateTimeFormat("zh-TW-u-ca-chinese", { year: "numeric", timeZone: "Asia/Shanghai" });
 } catch (e) { fmtNum = null; }
 
 // The Chinese calendar counts days in UTC+8. ICU's own new-moon times can be off by a day near
@@ -69,12 +70,15 @@ function newMoonOnOrBefore(date) {
 function partsFor(date, newMoon) {
   const mid = new Date(newMoon.getTime() + 15 * 86400000);
   const p = Object.fromEntries(fmtNum.formatToParts(mid).map((x) => [x.type, x.value]));
-  const z = fmtZh.formatToParts(mid).find((x) => x.type === "yearName");
-  const yearName = z ? z.value : "";
+  const month = parseInt(p.month, 10);
+  // Browsers may give yearName romanized ("bing-wu"), so derive 干支 from the Gregorian year.
+  const gMonth = new Date(mid.getTime() + H8).getUTCMonth() + 1;
+  const year = parseInt(p.relatedYear, 10) || new Date(mid.getTime() + H8).getUTCFullYear() - (month > gMonth ? 1 : 0);
+  const cyc = (((year - 4) % 60) + 60) % 60;
   return {
-    month: parseInt(p.month, 10), leap: /\D/.test(p.month),
+    month, leap: /\D/.test(p.month),
     day: chinaDay(date.getTime()) - chinaDay(newMoon.getTime()) + 1,
-    yearName, animal: ANIMALS[yearName.slice(-1)] || "",
+    yearName: STEMS[cyc % 10] + BRANCHES[cyc % 12], animal: ANIMALS[cyc % 12],
   };
 }
 
