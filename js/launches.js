@@ -1,6 +1,8 @@
+import { locale, tr } from "./i18n.js";
+
 // Upcoming launches worldwide from The Space Devs Launch Library 2 (CORS-enabled, 15 req/h without a key).
 const API = "https://ll.thespacedevs.com/2.3.0/launches/upcoming/?limit=40&mode=normal";
-const KEY = "moon.launches";
+const KEY = `moon.launches.${locale}.v2`;
 const TTL = 3600000;
 
 const STATUS = { Go: "確定發射", TBD: "時間未定", TBC: "待確認", Hold: "暫停", "In Flight": "飛行中", Success: "發射成功", Failure: "發射失敗", "Partial Failure": "部分失敗" };
@@ -31,7 +33,7 @@ const ROCKETS = [
 ];
 const EU = new Set(["GF", "SE", "NO", "DE", "IT", "FR", "GB", "ES", "PT"]);
 const regionName = (() => {
-  try { const dn = new Intl.DisplayNames(["zh-TW"], { type: "region" }); return (c) => (c ? dn.of(c) : ""); } catch { return () => ""; }
+  try { const dn = new Intl.DisplayNames([locale], { type: "region" }); return (c) => (c ? dn.of(c) : ""); } catch { return () => ""; }
 })();
 
 const pick = (list, s) => { const m = list.find(([re]) => re.test(s || "")); return m && (m[1].includes("$") || /^\^/.test(m[0].source) ? s.replace(m[0], m[1]).trim() : m[1]); };
@@ -56,14 +58,14 @@ function simplify(r) {
   return {
     id: r.id,
     mission: r.mission?.name || missionRaw,
-    rocket: pick(ROCKETS, rocketRaw) || rocketRaw,
-    provider: PROVIDERS[lsp.abbrev] || pick(PROVIDER_NAMES, lsp.name) || lsp.name || "",
+    rocket: locale === "en-US" ? rocketRaw : pick(ROCKETS, rocketRaw) || rocketRaw,
+    provider: locale === "en-US" ? lsp.name || "" : PROVIDERS[lsp.abbrev] || pick(PROVIDER_NAMES, lsp.name) || lsp.name || "",
     net: r.net,
     precision: r.net_precision?.abbrev || "MIN",
-    status: STATUS[r.status?.abbrev] || r.status?.name || "",
+    status: tr(STATUS[r.status?.abbrev] || r.status?.name || ""),
     statusAbbrev: r.status?.abbrev || "",
-    site: pick(SITES, r.pad?.location?.name) || regionName(cc) || r.pad?.location?.name || "",
-    orbit: ORBIT[r.mission?.orbit?.abbrev] || r.mission?.orbit?.name || "",
+    site: locale === "en-US" ? r.pad?.location?.name || regionName(cc) || "" : pick(SITES, r.pad?.location?.name) || regionName(cc) || r.pad?.location?.name || "",
+    orbit: tr(ORBIT[r.mission?.orbit?.abbrev] || r.mission?.orbit?.name || ""),
     live: !!r.webcast_live,
     nasa, tags,
   };

@@ -5,6 +5,7 @@ A Traditional Chinese moon experience that works from the visitor's current date
 Live site: https://moon-phase-psi.vercel.app
 
 ## Features
+- Traditional Chinese by default, with an English language switch that remembers your choice; `?lang=en` and `?lang=zh-Hant` also work
 - Realistic 3D moon (Three.js + NASA LRO textures), lit from the real Sun direction; drag to spin
 - Time-travel slider with play animation (±30 days, continuous playback)
 - Where the moon is: altitude/azimuth sky compass, moonrise/moonset, sunrise/sunset, device compass on phones

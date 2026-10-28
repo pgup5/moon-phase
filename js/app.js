@@ -1,3 +1,4 @@
+import { tr, locale, initializeLanguage } from "./i18n.js";
 import * as A from "./astro.js";
 import * as C from "./culture.js";
 import { initSky } from "./sky.js";
@@ -10,7 +11,8 @@ import { moonPath, moonPathSVG, moonPathMarker } from "./moon-path.js";
 
 import { viewingWeek, scoreViewingWeek } from "./viewing-week.js";
 
-const LOC = "zh-TW";
+initializeLanguage();
+const LOC = locale;
 const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
 const DAY = 86400000;
 const $ = (id) => document.getElementById(id);
@@ -37,9 +39,9 @@ function tzText(d) {
   const name = (new Intl.DateTimeFormat(LOC, { timeZoneName: "long" }).formatToParts(d).find((p) => p.type === "timeZoneName") || {}).value || "";
   return `${TZ}｜${name}｜UTC${sign}${pad(Math.floor(a / 60))}:${pad(a % 60)}`;
 }
-const DIRS = ["北", "北北東", "東北", "東北東", "東", "東南東", "東南", "南南東", "南", "南南西", "西南", "西南西", "西", "西北西", "西北", "北北西"];
+const DIRS = [tr("北"), tr("北北東"), tr("東北"), tr("東北東"), tr("東"), tr("東南東"), tr("東南"), tr("南南東"), tr("南"), tr("南南西"), tr("西南"), tr("西南西"), tr("西"), tr("西北西"), tr("西北"), tr("北北西")];
 const dirName = (az) => DIRS[Math.round(az / 22.5) % 16];
-const phaseLabel = (i) => A.PHASES[i].name;
+const phaseLabel = (i) => tr(A.PHASES[i].name);
 
 function toast(msg, ms = 3200) {
   const t = $("toast");
@@ -99,10 +101,10 @@ let lastDay = "", lastMonthKey = "";
 function render(force = false) {
   const now = new Date();
   const d = target();
-  $("clock").textContent = `現在時間：${fmtFull(now)}`;
-  $("tzInfo").textContent = `您的時區：${tzText(now)}`;
+  $("clock").textContent = tr`現在時間：${fmtFull(now)}`;
+  $("tzInfo").textContent = tr`您的時區：${tzText(now)}`;
   $("tz").textContent = TZ;
-  $("liveTag").textContent = state.live && !state.offsetH ? "即時" : "時光旅行中";
+  $("liveTag").textContent = state.live && !state.offsetH ? tr("即時") : tr("時光旅行中");
   $("liveTag").classList.toggle("off", !(state.live && !state.offsetH));
   if (document.activeElement !== $("dt")) $("dt").value = toLocalInput(d);
 
@@ -116,31 +118,31 @@ function render(force = false) {
   else fallback.innerHTML = moonSVG(ms.elong, 300, state.southern);
   stage.style.setProperty("--glow", (0.06 + ms.illum * 0.3).toFixed(2));
 
-  $("phaseName").textContent = ph.name;
-  $("phaseAlias").textContent = ph.alias ? `（${ph.alias}）` : "";
+  $("phaseName").textContent = phaseLabel(idx);
+  $("phaseAlias").textContent = locale === "zh-TW" && ph.alias ? `（${ph.alias}）` : "";
   $("forWhen").textContent = fmtFull(d);
   const lunar = C.lunarParts(d);
-  $("lunarLine").textContent = lunar ? `農曆 ${C.lunarString(d, true)}` : "";
+  $("lunarLine").textContent = lunar ? tr`農曆 ${C.lunarString(d, true)}` : "";
   $("illum").textContent = `${(ms.illum * 100).toFixed(1)}%`;
   $("illumBar").style.width = `${ms.illum * 100}%`;
-  $("age").textContent = `${age.toFixed(1)} 天`;
+  $("age").textContent = tr`${age.toFixed(1)} 天`;
   $("cycle").textContent = `${((ms.elong / 360) * 100).toFixed(1)}%`;
-  $("dist").textContent = `${Math.round(ms.distKm).toLocaleString(LOC)} 公里`;
-  $("term").textContent = A.currentSolarTerm(d);
+  $("dist").textContent = tr`${Math.round(ms.distKm).toLocaleString(LOC)} 公里`;
+  $("term").textContent = tr(A.currentSolarTerm(d));
   const poem = C.poemFor(idx, d);
-  $("poem").innerHTML = `${poem.text}<cite>—— ${poem.author}《${poem.title}》</cite>`;
+  $("poem").innerHTML = `${poem.text}<cite>${locale === "en-US" ? `— ${poem.author}, ${poem.title}` : `—— ${poem.author}《${poem.title}》`}</cite>`;
 
   // badges & banner (once per day)
   const dk = dayKey(d);
   if (force || dk !== lastDay) {
-    const badges = eventsNear(d).map((e) => e.kind);
+    const badges = eventsNear(d).map((e) => tr(e.kind));
     const fest = C.festivalOf(lunar);
-    if (fest) badges.unshift(fest.name);
+    if (fest) badges.unshift(tr(fest.name));
     const term = A.solarTerms(new Date(d.getFullYear(), d.getMonth(), d.getDate()), 1)[0];
-    if (term && dayKey(term.date) === dk) badges.unshift(term.name);
+    if (term && dayKey(term.date) === dk) badges.unshift(tr(term.name));
     $("badges").innerHTML = badges.map((b) => `<span class="badge">${b}</span>`).join("");
     const banner = $("banner");
-    if (fest) { banner.hidden = false; banner.textContent = `今天是${fest.name}：${fest.desc}`; }
+    if (fest) { banner.hidden = false; banner.textContent = tr`今天是${tr(fest.name)}：${tr(fest.desc)}`; }
     else banner.hidden = true;
     if (fest && fest.name === "中秋節") setTimeout(hopRabbit, 800);
   }
@@ -165,7 +167,8 @@ const scheduleRender = (force) => { cancelAnimationFrame(raf); raf = requestAnim
 // ---------- nightly moon path ----------
 let pathKey = "", pathData = null, pathPreview = false;
 function renderMoonPath(d) {
-  const { lat, lon, name } = state.loc;
+  const { lat, lon } = state.loc;
+  const name = tr(state.loc.name);
   const key = `${dayKey(d)}:${lat}:${lon}`;
   if (key !== pathKey) {
     pathKey = key; pathPreview = false;
@@ -173,13 +176,13 @@ function renderMoonPath(d) {
     $("moonPathChart").innerHTML = moonPathSVG(pathData);
     $("moonPathSlider").max = Math.round((pathData.end - pathData.start) / 60000);
     const events = [...pathData.crossings];
-    if (pathData.peak) events.push({ ...pathData.peak, kind: "最高點" });
+    if (pathData.peak) events.push({ ...pathData.peak, kind: tr("最高點") });
     events.sort((a, b) => a.t - b.t);
     $("moonPathEvents").innerHTML = events.length ? events.map((p) =>
-      `<div class="item"><span><b>${p.kind}</b><br><small>${fmtShort(new Date(p.t))}</small></span><span>${dirName(p.az)}方 ${p.az.toFixed(0)}°<br><small>高度 ${Math.max(0, p.alt).toFixed(0)}°</small></span></div>`
-    ).join("") : '<p class="when">這段時間月亮都在地平線下。</p>';
+      tr`<div class="item"><span><b>${p.kind}</b><br><small>${fmtShort(new Date(p.t))}</small></span><span>${dirName(p.az)}方 ${p.az.toFixed(0)}°<br><small>高度 ${Math.max(0, p.alt).toFixed(0)}°</small></span></div>`
+    ).join("") : tr('<p class="when">這段時間月亮都在地平線下。</p>');
   }
-  $("moonPathTitle").textContent = dayKey(d) === dayKey(new Date()) ? "今晚月亮路徑" : "所選夜晚月亮路徑";
+  $("moonPathTitle").textContent = dayKey(d) === dayKey(new Date()) ? tr("今晚月亮路徑") : tr("所選夜晚月亮路徑");
   $("moonPathContext").textContent = `${name} · ${fmtShort(new Date(pathData.start))} — ${fmtShort(new Date(pathData.end))}`;
   if (!pathPreview) {
     $("moonPathSlider").value = Math.max(0, Math.min(+$("moonPathSlider").max, Math.round((+d - pathData.start) / 60000)));
@@ -190,8 +193,8 @@ function updateMoonPathPosition(date) {
   const inRange = +date >= pathData.start && +date <= pathData.end;
   const p = moonPathMarker(date, state.loc.lat, state.loc.lon);
   $("moonPathMarker").innerHTML = inRange ? p.svg : "";
-  $("moonPathPosition").textContent = `${pathPreview ? "預覽" : "所選時間"}：${fmtShort(date)} · ${dirName(p.az)}方 ${p.az.toFixed(0)}° · 高度 ${p.alt.toFixed(0)}°`
-    + (!inRange ? "（不在這晚路徑範圍內，拖曳可預覽）" : p.alt < 0 ? "（地平線下）" : "");
+  $("moonPathPosition").textContent = tr`${pathPreview ? tr("預覽") : tr("所選時間")}：${fmtShort(date)} · ${dirName(p.az)}方 ${p.az.toFixed(0)}° · 高度 ${p.alt.toFixed(0)}°`
+    + (!inRange ? tr("（不在這晚路徑範圍內，拖曳可預覽）") : p.alt < 0 ? tr("（地平線下）") : "");
 }
 $("moonPathSlider").addEventListener("input", () => {
   pathPreview = true;
@@ -202,92 +205,94 @@ $("moonPathReset").onclick = () => { pathPreview = false; renderMoonPath(target(
 // ---------- best moon-viewing windows ----------
 let lastViewingKey = "";
 function renderViewing(d) {
-  const { lat, lon, name } = state.loc;
+  const { lat, lon } = state.loc;
+  const name = tr(state.loc.name);
   const key = `view${dayKey(d)}:${lat}:${lon}:${name}:${Math.floor(Date.now() / (30 * 60000))}`;
   if (key === lastViewingKey) return;
   lastViewingKey = key;
   const windows = cached(key, () => A.viewingWindows(d, lat, lon));
-  $("viewingContext").textContent = `${fmtDate(d)}夜間 · ${name} · ${TZ}`;
-  const time = (t) => `${dayKey(t) !== dayKey(d) ? "翌日 " : ""}${fmtTime(t)}`;
+  $("viewingContext").textContent = tr`${fmtDate(d)}夜間 · ${name} · ${TZ}`;
+  const time = (t) => `${dayKey(t) !== dayKey(d) ? tr("翌日 ") : ""}${fmtTime(t)}`;
   $("viewingWindows").innerHTML = windows.length ? windows.map((w) =>
-    `<div class="item"><span><b>${time(w.start)} — ${time(w.end)}</b><br><small>月亮最高：${time(w.peak)} · 高度 ${w.altitude.toFixed(0)}° · ${dirName(w.azimuth)}方</small></span></div>`
-  ).join("") : '<div class="when">這一晚沒有符合條件的賞月時段。可切換日期，或使用您的位置重新計算。</div>';
+    tr`<div class="item"><span><b>${time(w.start)} — ${time(w.end)}</b><br><small>月亮最高：${time(w.peak)} · 高度 ${w.altitude.toFixed(0)}° · ${dirName(w.azimuth)}方</small></span></div>`
+  ).join("") : tr('<div class="when">這一晚沒有符合條件的賞月時段。可切換日期，或使用您的位置重新計算。</div>');
   renderViewingScore(d, windows, lat, lon, key);
 }
 
 async function renderViewingScore(d, windows, lat, lon, key) {
   const tonight = dayKey(d) === dayKey(new Date());
-  $("viewingScoreTitle").textContent = tonight ? "今晚賞月評分" : "所選夜晚賞月評分";
+  $("viewingScoreTitle").textContent = tonight ? tr("今晚賞月評分") : tr("所選夜晚賞月評分");
   const show = (result, note) => {
     if (key !== lastViewingKey) return;
     $("viewingScoreValue").textContent = result ? `${result.score} / 100` : "—";
-    $("viewingScoreLabel").textContent = !result ? "沒有符合條件的時段"
-      : result.score >= 80 ? "很適合賞月" : result.score >= 60 ? "適合賞月"
-      : result.score >= 40 ? "條件普通" : "賞月條件較差";
+    $("viewingScoreLabel").textContent = !result ? tr("沒有符合條件的時段")
+      : result.score >= 80 ? tr("很適合賞月") : result.score >= 60 ? tr("適合賞月")
+      : result.score >= 40 ? tr("條件普通") : tr("賞月條件較差");
     $("viewingScoreDetails").textContent = result
-      ? `建議觀賞：${fmtShort(result.date)} · 月亮高度 ${result.altitude.toFixed(0)}° · 照明 ${(result.illumination * 100).toFixed(0)}%`
-        + (result.forecast ? ` · 雲量 ${result.forecast.cloud}% · 降雨機率 ${result.forecast.rain}%` : "") : "可切換日期，看看其他夜晚。";
+      ? tr`建議觀賞：${fmtShort(result.date)} · 月亮高度 ${result.altitude.toFixed(0)}° · 照明 ${(result.illumination * 100).toFixed(0)}%`
+        + (result.forecast ? tr` · 雲量 ${result.forecast.cloud}% · 降雨機率 ${result.forecast.rain}%` : "") : tr("可切換日期，看看其他夜晚。");
     $("viewingScoreNote").textContent = note;
   };
   const astronomy = viewingScore(windows, lat, lon);
-  if (!astronomy) { show(null, "無適合時段，不計分。"); return; }
+  if (!astronomy) { show(null, tr("無適合時段，不計分。")); return; }
   const now = Date.now();
   if (+windows[0].start < now - DAY || +windows[windows.length - 1].end > now + 15 * DAY) {
-    show(astronomy, "僅天文評分：所選夜晚不在可用預報範圍內，未納入天氣。");
+    show(astronomy, tr("僅天文評分：所選夜晚不在可用預報範圍內，未納入天氣。"));
     return;
   }
-  show(astronomy, "正在取得天氣預報，目前顯示天文評分…");
+  show(astronomy, tr("正在取得天氣預報，目前顯示天文評分…"));
   try {
     const weather = await getViewingWeather(lat, lon);
     const result = viewingScore(windows, lat, lon, weather);
-    show(result, result.forecast ? "已納入賞月時段的逐時天氣預報。" : "僅天文評分：預報資料未完整涵蓋賞月時段。");
+    show(result, result.forecast ? tr("已納入賞月時段的逐時天氣預報。") : tr("僅天文評分：預報資料未完整涵蓋賞月時段。"));
   } catch {
-    show(astronomy, "僅天文評分：暫時無法取得天氣，請稍後重新整理。");
+    show(astronomy, tr("僅天文評分：暫時無法取得天氣，請稍後重新整理。"));
   }
 }
 
 // ---------- seven-night comparison ----------
 let lastWeekKey = "";
 async function renderViewingWeek(d) {
-  const { lat, lon, name } = state.loc;
+  const { lat, lon } = state.loc;
+  const name = tr(state.loc.name);
   const key = `${dayKey(d)}:${lat}:${lon}:${Math.floor(Date.now() / (30 * 60000))}`;
   if (key === lastWeekKey) return;
   lastWeekKey = key;
   const nights = cached(`week:${dayKey(d)}:${lat}:${lon}`, () => viewingWeek(d, lat, lon));
-  $("viewingWeekTitle").textContent = dayKey(d) === dayKey(new Date()) ? "未來七晚賞月比較" : "所選日起七晚賞月比較";
+  $("viewingWeekTitle").textContent = dayKey(d) === dayKey(new Date()) ? tr("未來七晚賞月比較") : tr("所選日起七晚賞月比較");
   $("viewingWeekContext").textContent = `${fmtDate(nights[0].night)} — ${fmtDate(nights[6].night)} · ${name} · ${TZ}`;
   const show = (comparison, message) => {
     if (key !== lastWeekKey) return;
     $("viewingWeekStatus").textContent = message;
     $("viewingWeekRows").innerHTML = comparison.rows.map((n) => {
-      const time = (t) => `${dayKey(t) !== dayKey(n.night) ? "翌日 " : ""}${fmtTime(t)}`;
+      const time = (t) => `${dayKey(t) !== dayKey(n.night) ? tr("翌日 ") : ""}${fmtTime(t)}`;
       const r = n.result;
       const weather = r?.forecast;
-      return `<tr${n.best ? ' class="week-best"' : ""}>
-        <th scope="row"><button data-week-time="${+n.night}">${n.night.toLocaleDateString(LOC, { month: "numeric", day: "numeric", weekday: "short" })}</button><small>${phaseLabel(n.phase)} · 照明 ${(n.moon.illum * 100).toFixed(0)}%</small>${n.best ? '<span class="badge">七晚最高分</span>' : ""}</th>
-        <td>${n.windows.length ? n.windows.map((w) => `${time(w.start)} — ${time(w.end)}`).join("<br>") : "無符合條件時段"}</td>
-        <td>${r ? `${time(r.date)}<small>${weather ? `雲量 ${weather.cloud}% · 降雨機率 ${weather.rain}%` : "未納入天氣"}</small>` : "—"}</td>
-        <td>${r ? `<strong>${r.score}</strong> / 100<small>${comparison.weatherIncluded ? "含天氣" : "僅天文"}</small>` : "—"}</td>
+      return tr`<tr${n.best ? ' class="week-best"' : ""}>
+        <th scope="row"><button data-week-time="${+n.night}">${n.night.toLocaleDateString(LOC, { month: "numeric", day: "numeric", weekday: "short" })}</button><small>${phaseLabel(n.phase)} · 照明 ${(n.moon.illum * 100).toFixed(0)}%</small>${n.best ? tr('<span class="badge">七晚最高分</span>') : ""}</th>
+        <td>${n.windows.length ? n.windows.map((w) => `${time(w.start)} — ${time(w.end)}`).join("<br>") : tr("無符合條件時段")}</td>
+        <td>${r ? `${time(r.date)}<small>${weather ? tr`雲量 ${weather.cloud}% · 降雨機率 ${weather.rain}%` : tr("未納入天氣")}</small>` : "—"}</td>
+        <td>${r ? `<strong>${r.score}</strong> / 100<small>${comparison.weatherIncluded ? tr("含天氣") : tr("僅天文")}</small>` : "—"}</td>
       </tr>`;
     }).join("");
   };
   const astronomy = scoreViewingWeek(nights, lat, lon);
   if (!astronomy.rows.some((n) => n.result)) {
-    show(astronomy, "這七晚沒有符合條件的賞月時段，可切換日期或地點。");
+    show(astronomy, tr("這七晚沒有符合條件的賞月時段，可切換日期或地點。"));
     return;
   }
   const now = Date.now();
   if (+nights[0].night < now - DAY || +nights[6].night > now + 14 * DAY) {
-    show(astronomy, "僅天文比較：日期不在完整的天氣預報範圍內。");
+    show(astronomy, tr("僅天文比較：日期不在完整的天氣預報範圍內。"));
     return;
   }
-  show(astronomy, "正在取得天氣預報，目前七晚皆顯示天文評分…");
+  show(astronomy, tr("正在取得天氣預報，目前七晚皆顯示天文評分…"));
   try {
     const weather = await getViewingWeather(lat, lon);
     const comparison = scoreViewingWeek(nights, lat, lon, weather);
-    show(comparison, comparison.weatherIncluded ? "七晚採用相同評分方式，已納入逐時天氣預報。" : "預報未完整涵蓋所有賞月時段，七晚統一使用天文評分。");
+    show(comparison, comparison.weatherIncluded ? tr("七晚採用相同評分方式，已納入逐時天氣預報。") : tr("預報未完整涵蓋所有賞月時段，七晚統一使用天文評分。"));
   } catch {
-    show(astronomy, "暫時無法取得天氣，七晚統一使用天文評分。");
+    show(astronomy, tr("暫時無法取得天氣，七晚統一使用天文評分。"));
   }
 }
 $("viewingWeekRows").addEventListener("click", (event) => {
@@ -299,29 +304,30 @@ $("viewingWeekRows").addEventListener("click", (event) => {
 
 // ---------- where is the moon ----------
 function renderWhere(d) {
-  const { lat, lon, name } = state.loc;
+  const { lat, lon } = state.loc;
+  const name = tr(state.loc.name);
   const mp = A.moonPosition(d, lat, lon), sp = A.sunPosition(d, lat, lon);
   sky.setSunAltitude(sp.alt);
-  $("locName").textContent = `位置：${name}（${Math.abs(lat).toFixed(2)}°${lat >= 0 ? "N" : "S"}，${Math.abs(lon).toFixed(2)}°${lon >= 0 ? "E" : "W"}）`;
+  $("locName").textContent = tr`位置：${name}（${Math.abs(lat).toFixed(2)}°${lat >= 0 ? "N" : "S"}，${Math.abs(lon).toFixed(2)}°${lon >= 0 ? "E" : "W"}）`;
   $("moonAz").textContent = `${dirName(mp.az)}（${mp.az.toFixed(0)}°）`;
-  $("moonAlt").textContent = `${mp.alt.toFixed(1)}°${mp.alt < 0 ? "（地平線下）" : ""}`;
+  $("moonAlt").textContent = `${mp.alt.toFixed(1)}°${mp.alt < 0 ? tr("（地平線下）") : ""}`;
   const key = `rs${dayKey(d)}${lat}${lon}`;
   const rs = cached(key, () => A.riseSet(d, lat, lon, "moon"));
   const ss = cached("s" + key, () => A.riseSet(d, lat, lon, "sun"));
-  $("moonRise").textContent = rs.alwaysUp ? "整天在天上" : rs.alwaysDown ? "今天不升起" : rs.rise ? fmtTime(rs.rise) : "今天不升起";
-  $("moonSet").textContent = rs.alwaysUp || rs.alwaysDown ? "—" : rs.set ? fmtTime(rs.set) : "今天不落下";
+  $("moonRise").textContent = rs.alwaysUp ? tr("整天在天上") : rs.alwaysDown ? tr("今天不升起") : rs.rise ? fmtTime(rs.rise) : tr("今天不升起");
+  $("moonSet").textContent = rs.alwaysUp || rs.alwaysDown ? "—" : rs.set ? fmtTime(rs.set) : tr("今天不落下");
   $("sunRS").textContent = `${fmtTime(ss.rise)} / ${fmtTime(ss.set)}`;
   let tip;
   if (mp.alt > 0) {
-    tip = `月亮在地平線上，面向${dirName(mp.az)}方、抬頭約 ${mp.alt.toFixed(0)}° 就能看到。`;
-    if (sp.alt > 0) tip += "現在是白天，月亮可能比較淡。";
+    tip = tr`月亮在地平線上，面向${dirName(mp.az)}方、抬頭約 ${mp.alt.toFixed(0)}° 就能看到。`;
+    if (sp.alt > 0) tip += tr("現在是白天，月亮可能比較淡。");
   } else {
     let next = rs.rise && rs.rise > d ? rs.rise : null;
     if (!next) {
       const nd = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1, 12);
       next = cached(`rs${dayKey(nd)}${lat}${lon}`, () => A.riseSet(nd, lat, lon, "moon")).rise;
     }
-    tip = next ? `月亮目前在地平線下，下次月出：${fmtShort(next)}` : "月亮目前在地平線下。";
+    tip = next ? tr`月亮目前在地平線下，下次月出：${fmtShort(next)}` : tr("月亮目前在地平線下。");
   }
   $("visTip").textContent = tip;
   drawCompass(mp, sp);
@@ -337,9 +343,9 @@ function drawCompass(mp, sp) {
     const a = (i * 5 * Math.PI) / 180, long = i % 18 === 0, r1 = long ? 92 : 97;
     return `<line x1="${110 + r1 * Math.sin(a)}" y1="${110 - r1 * Math.cos(a)}" x2="${110 + 102 * Math.sin(a)}" y2="${110 - 102 * Math.cos(a)}" stroke="rgba(200,210,255,${long ? 0.8 : 0.3})" stroke-width="${long ? 2 : 1}"/>`;
   }).join("");
-  const labels = [["北", 0], ["東", 90], ["南", 180], ["西", 270]].map(([t, az]) => {
+  const labels = [[tr("北"), 0], [tr("東"), 90], [tr("南"), 180], [tr("西"), 270]].map(([t, az]) => {
     const a = (az * Math.PI) / 180;
-    return `<text x="${110 + 78 * Math.sin(a)}" y="${110 - 78 * Math.cos(a) + 5}" text-anchor="middle" font-size="14" fill="${t === "北" ? "#ff9b8a" : "#cfd5ff"}">${t}</text>`;
+    return `<text x="${110 + 78 * Math.sin(a)}" y="${110 - 78 * Math.cos(a) + 5}" text-anchor="middle" font-size="14" fill="${t === tr("北") ? "#ff9b8a" : "#cfd5ff"}">${t}</text>`;
   }).join("");
   const [mx, my] = plotXY(mp.alt, mp.az), [sx, sy] = plotXY(sp.alt, sp.az);
   const below = mp.alt < 0;
@@ -357,27 +363,27 @@ function drawCompass(mp, sp) {
 
 // ---------- lists ----------
 function renderUpcoming(d) {
-  const items = [[90, "上弦月"], [180, "滿月（望）"], [270, "下弦月"], [0, "新月（朔）"]]
+  const items = [[90, tr("上弦月")], [180, tr("滿月（望）")], [270, tr("下弦月")], [0, tr("新月（朔）")]]
     .map(([t, n]) => ({ n, t: A.nextPhaseTime(d, t) })).sort((a, b) => a.t - b.t);
   $("upcoming").innerHTML = items.map((x) => `<div><b>${x.n}</b>${fmtFull(x.t)}<br><small>${C.lunarString(x.t)}・${relDays(x.t, d)}</small></div>`).join("");
 }
 function relDays(t, from) {
   const n = (t - from) / DAY;
-  if (n < 1) return `${Math.max(1, Math.round(n * 24))} 小時後`;
-  return `${Math.round(n)} 天後`;
+  if (n < 1) return tr`${Math.max(1, Math.round(n * 24))} 小時後`;
+  return tr`${Math.round(n)} 天後`;
 }
 function renderLists(d) {
   const ev = yearEvents(new Date(d.getFullYear(), d.getMonth(), d.getDate()));
   $("events").innerHTML = ev.length ? ev.map((e) => `<div class="item ${e.cls}" data-t="${e.date.getTime()}" role="button" tabindex="0">
-      <span><b>${e.kind}</b><br><small>${e.cls === "solar" || e.cls === "lunar" ? "能否看見依所在地而定" : `距離約 ${Math.round(e.distKm || A.moonState(e.date).distKm).toLocaleString(LOC)} 公里`}</small></span>
-      <span style="text-align:right">${fmtShort(e.date)}<br><small>${relDays(e.date, d)}</small></span></div>`).join("") : '<div class="when">未來一年沒有特殊天象</div>';
+      <span><b>${tr(e.kind)}</b><br><small>${e.cls === "solar" || e.cls === "lunar" ? tr("能否看見依所在地而定") : tr`距離約 ${Math.round(e.distKm || A.moonState(e.date).distKm).toLocaleString(LOC)} 公里`}</small></span>
+      <span style="text-align:right">${fmtShort(e.date)}<br><small>${relDays(e.date, d)}</small></span></div>`).join("") : tr('<div class="when">未來一年沒有特殊天象</div>');
   const start = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  const terms = A.solarTerms(start, 4).map((t) => ({ name: t.name, desc: "二十四節氣", date: t.date }));
+  const terms = A.solarTerms(start, 4).map((t) => ({ name: t.name, desc: tr("二十四節氣"), date: t.date }));
   const fests = C.upcomingFestivals(start).slice(0, 6);
   const all = [...terms, ...fests].sort((a, b) => a.date - b.date).slice(0, 8);
   $("festivals").innerHTML = all.map((f) => `<div class="item" data-t="${f.date.getTime()}" role="button" tabindex="0">
-      <span><b>${f.name}</b><br><small>${f.desc}</small></span>
-      <span style="text-align:right">${fmtDate(f.date)}<br><small>${daysFrom(new Date(f.date.getFullYear(), f.date.getMonth(), f.date.getDate()), start) === 0 ? "今天" : relDays(f.date, d)}</small></span></div>`).join("");
+      <span><b>${tr(f.name)}</b><br><small>${tr(f.desc)}</small></span>
+      <span style="text-align:right">${fmtDate(f.date)}<br><small>${daysFrom(new Date(f.date.getFullYear(), f.date.getMonth(), f.date.getDate()), start) === 0 ? tr("今天") : relDays(f.date, d)}</small></span></div>`).join("");
 }
 for (const id of ["events", "festivals"]) {
   $(id).addEventListener("click", (e) => {
@@ -394,24 +400,24 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&l
 const PRECISE = ["SEC", "MIN", "HR"];
 function launchWhen(l) {
   const t = new Date(l.net);
-  if (PRECISE.includes(l.precision)) return fmtShort(t) + (l.precision === "HR" ? " 左右" : "");
+  if (PRECISE.includes(l.precision)) return fmtShort(t) + (l.precision === "HR" ? tr(" 左右") : "");
   // Coarse NETs are UTC midnights at the end of the period; converting them would shift the date.
   const y = t.getUTCFullYear(), p = l.precision;
   if (p === "DAY") return t.toLocaleDateString(LOC, { year: "numeric", month: "long", day: "numeric", weekday: "short", timeZone: "UTC" });
-  if (/^Q\d$/.test(p)) return `${y}年第${p[1]}季`;
-  if (p === "H1" || p === "H2") return `${y}年${p === "H1" ? "上" : "下"}半年`;
-  if (p === "Y" || p === "FY") return `${y}年`;
+  if (/^Q\d$/.test(p)) return tr`${y}年第${p[1]}季`;
+  if (p === "H1" || p === "H2") return tr`${y}年${p === "H1" ? tr("上") : tr("下")}半年`;
+  if (p === "Y" || p === "FY") return tr`${y}年`;
   return t.toLocaleDateString(LOC, { year: "numeric", month: "long", timeZone: "UTC" });
 }
 function launchCountdown(l, now) {
-  if (l.live) return "直播中";
-  if (l.statusAbbrev === "In Flight") return "飛行中";
-  if (![...PRECISE, "DAY"].includes(l.precision)) return l.status;
+  if (l.live) return tr("直播中");
+  if (l.statusAbbrev === "In Flight") return tr("飛行中");
+  if (![...PRECISE, "DAY"].includes(l.precision)) return tr(l.status);
   const ms = new Date(l.net) - now;
-  if (ms <= 0) return `${l.status}・即將發射`;
+  if (ms <= 0) return tr`${tr(l.status)}・即將發射`;
   const h = ms / 3600000;
-  const rel = h < 1 ? `${Math.max(1, Math.round(h * 60))} 分鐘後` : h < 48 ? `${Math.round(h)} 小時後` : `${Math.round(h / 24)} 天後`;
-  return `${l.status}・${rel}`;
+  const rel = h < 1 ? tr`${Math.max(1, Math.round(h * 60))} 分鐘後` : h < 48 ? tr`${Math.round(h)} 小時後` : tr`${Math.round(h / 24)} 天後`;
+  return `${tr(l.status)}・${rel}`;
 }
 let launchData = null;
 let launchFilter = localStorage.getItem("moon.launchFilter") || "all";
@@ -422,13 +428,13 @@ function renderLaunches() {
   const counts = Object.fromEntries(CATEGORIES.map(([k]) => [k, k === "all" ? launches.length : launches.filter((l) => l.tags.includes(k)).length]));
   if (!counts[launchFilter]) launchFilter = "all";
   $("launchFilter").innerHTML = CATEGORIES.filter(([k]) => counts[k]).map(([k, name]) =>
-    `<button data-k="${k}" aria-pressed="${k === launchFilter}">${name} <small>${counts[k]}</small></button>`).join("");
+    `<button data-k="${k}" aria-pressed="${k === launchFilter}">${tr(name)} <small>${counts[k]}</small></button>`).join("");
   const shown = launchFilter === "all" ? launches.slice(0, 12) : launches.filter((l) => l.tags.includes(launchFilter));
   $("launches").innerHTML = shown.length ? shown.map((l) => `<div class="item launch">
       <span><b>${esc(l.mission)}</b>${l.nasa && l.provider !== "NASA" ? ' <span class="badge">NASA</span>' : ""}<br><small>${esc([l.provider, l.rocket, l.site, l.orbit].filter(Boolean).join("・"))}</small></span>
       <span style="text-align:right">${esc(launchWhen(l))}<br><small>${esc(launchCountdown(l, now))}</small></span></div>`).join("")
-    : '<div class="when">目前沒有已排定的發射</div>';
-  $("launchSrc").dataset.updated = stale ? `（離線資料，更新於 ${fmtShort(new Date(at))}）` : "";
+    : tr('<div class="when">目前沒有已排定的發射</div>');
+  $("launchSrc").dataset.updated = stale ? tr`（離線資料，更新於 ${fmtShort(new Date(at))}）` : "";
 }
 $("launchFilter").addEventListener("click", (e) => {
   const b = e.target.closest("button[data-k]");
@@ -443,10 +449,19 @@ async function loadLaunches() {
     renderLaunches();
   } catch (e) {
     console.warn("Launch data unavailable", e);
-    if (!launchData) $("launches").innerHTML = '<div class="when">暫時無法取得發射資料，請稍後再試</div>';
+    if (!launchData) $("launches").innerHTML = tr('<div class="when">暫時無法取得發射資料，請稍後再試</div>');
   }
 }
-$("launchTz").textContent = `以您的時區顯示：${TZ}`;
+$("languageSelect").addEventListener("change", () => {
+  const selected = $("languageSelect").value;
+  try { localStorage.setItem("moon.language", selected); } catch {}
+  const url = new URL(location.href);
+  url.searchParams.set("lang", selected);
+  if (!state.live || state.offsetH) url.searchParams.set("t", target().toISOString());
+  url.searchParams.set("hemi", state.southern ? "S" : "N");
+  location.assign(url.href);
+});
+$("launchTz").textContent = tr`以您的時區顯示：${TZ}`;
 loadLaunches();
 setInterval(renderLaunches, 60000);
 setInterval(loadLaunches, 15 * 60000);
@@ -454,19 +469,19 @@ setInterval(loadLaunches, 15 * 60000);
 // ---------- calendar ----------
 function renderCalendar(d) {
   const y = state.calYear ?? d.getFullYear(), m = state.calMonth ?? d.getMonth();
-  $("calTitle").textContent = `${y} 年 ${m + 1} 月`;
+  $("calTitle").textContent = locale === "en-US" ? new Date(y, m, 1).toLocaleDateString(LOC, { year: "numeric", month: "long" }) : `${y} 年 ${m + 1} 月`;
   const first = new Date(y, m, 1), days = new Date(y, m + 1, 0).getDate();
   const end = new Date(y, m + 1, 1);
   const marks = {};
-  for (const [t, n] of [[0, "新月"], [90, "上弦"], [180, "滿月"], [270, "下弦"]]) {
+  for (const [t, n] of [[0, tr("新月")], [90, tr("上弦")], [180, tr("滿月")], [270, tr("下弦")]]) {
     for (let x = A.nextPhaseTime(new Date(first.getTime() - DAY), t); x < end; x = A.nextPhaseTime(new Date(x.getTime() + DAY), t)) {
       if (x >= first) marks[x.getDate()] = `${n} ${fmtTime(x)}`;
     }
   }
   const terms = {};
-  for (const t of A.solarTerms(first, 3)) if (t.date < end) terms[t.date.getDate()] = t.name;
+  for (const t of A.solarTerms(first, 3)) if (t.date < end) terms[t.date.getDate()] = tr(t.name);
   const today = new Date();
-  let html = ["日", "一", "二", "三", "四", "五", "六"].map((w) => `<div class="dow">${w}</div>`).join("");
+  let html = [tr("日"), tr("一"), tr("二"), tr("三"), tr("四"), tr("五"), tr("六")].map((w) => `<div class="dow">${w}</div>`).join("");
   html += "<div></div>".repeat(first.getDay());
   for (let i = 1; i <= days; i++) {
     const day = new Date(y, m, i, 20);
@@ -474,7 +489,7 @@ function renderCalendar(d) {
     const l = C.lunarParts(new Date(y, m, i, 12));
     const fest = C.festivalOf(l);
     const isToday = dayKey(day) === dayKey(today), isSel = dayKey(day) === dayKey(d);
-    const tag = fest ? `<span class="tag fest">${fest.name}</span>` : terms[i] ? `<span class="tag">${terms[i]}</span>` : marks[i] ? `<span class="tag">${marks[i].split(" ")[0]}</span>` : "";
+    const tag = fest ? `<span class="tag fest">${tr(fest.name)}</span>` : terms[i] ? `<span class="tag">${terms[i]}</span>` : marks[i] ? `<span class="tag">${locale === "en-US" ? marks[i].replace(/\s\d{2}:\d{2}$/, "") : marks[i].split(" ")[0]}</span>` : "";
     html += `<div class="day${isToday ? " today" : ""}${isSel ? " sel" : ""}" data-d="${i}" title="${marks[i] || ""}">${i}<span class="lunar">${C.dayLabel(l)}</span>${moonSVG(ms.elong, 26, state.southern)}${tag}</div>`;
   }
   $("cal").innerHTML = html;
@@ -504,7 +519,7 @@ function jumpTo(date) {
 }
 function updateOffsetLabel() {
   const h = state.offsetH, sign = h > 0 ? "+" : h < 0 ? "−" : "±", a = Math.abs(h);
-  $("offsetLabel").textContent = `${sign}${Math.floor(a / 24)} 天 ${Math.round(a % 24)} 小時`;
+  $("offsetLabel").textContent = tr`${sign}${Math.floor(a / 24)} 天 ${Math.round(a % 24)} 小時`;
 }
 $("dt").addEventListener("change", () => { if ($("dt").value) jumpTo(new Date($("dt").value)); });
 $("nowBtn").onclick = () => {
@@ -519,7 +534,7 @@ $("slider").addEventListener("input", () => {
   updateOffsetLabel(); scheduleRender();
 });
 let playRaf = 0, lastT = 0;
-function stopPlay() { state.playing = false; cancelAnimationFrame(playRaf); $("playBtn").textContent = "▶ 播放"; }
+function stopPlay() { state.playing = false; cancelAnimationFrame(playRaf); $("playBtn").textContent = tr("▶ 播放"); $("playBtn").setAttribute("aria-label", tr("播放")); }
 function playStep(t) {
   if (!state.playing) return;
   const dt = lastT ? Math.min(0.1, (t - lastT) / 1000) : 0; lastT = t;
@@ -532,25 +547,25 @@ function playStep(t) {
 $("playBtn").onclick = () => {
   if (state.playing) return stopPlay();
   if (state.live) { state.live = false; state.base = new Date(); }
-  state.playing = true; lastT = 0; $("playBtn").textContent = "⏸ 暫停";
+  state.playing = true; lastT = 0; $("playBtn").textContent = tr("⏸ 暫停"); $("playBtn").setAttribute("aria-label", tr("暫停"));
   playRaf = requestAnimationFrame(playStep);
 };
 
 // ---------- location & compass ----------
 $("locBtn").onclick = () => {
-  if (!navigator.geolocation) return toast("此瀏覽器不支援定位");
+  if (!navigator.geolocation) return toast(tr("此瀏覽器不支援定位"));
   $("locBtn").disabled = true;
   navigator.geolocation.getCurrentPosition((p) => {
     state.loc = { lat: +p.coords.latitude.toFixed(3), lon: +p.coords.longitude.toFixed(3), name: "您的位置" };
     localStorage.setItem("moon.loc", JSON.stringify(state.loc));
-    $("locBtn").disabled = false; memo.clear(); scheduleRender(true); toast("已更新為您的位置");
-  }, (err) => { $("locBtn").disabled = false; toast(err.code === 1 ? "未取得定位權限，繼續使用預設位置" : "無法取得位置"); }, { timeout: 10000, maximumAge: 600000 });
+    $("locBtn").disabled = false; memo.clear(); scheduleRender(true); toast(tr("已更新為您的位置"));
+  }, (err) => { $("locBtn").disabled = false; toast(err.code === 1 ? tr("未取得定位權限，繼續使用預設位置") : tr("無法取得位置")); }, { timeout: 10000, maximumAge: 600000 });
 };
 if ("DeviceOrientationEvent" in window && matchMedia("(pointer: coarse)").matches) $("compassBtn").hidden = false;
 $("compassBtn").onclick = async () => {
   try {
-    if (typeof DeviceOrientationEvent.requestPermission === "function" && (await DeviceOrientationEvent.requestPermission()) !== "granted") return toast("未允許使用指南針");
-  } catch (e) { return toast("無法啟用指南針"); }
+    if (typeof DeviceOrientationEvent.requestPermission === "function" && (await DeviceOrientationEvent.requestPermission()) !== "granted") return toast(tr("未允許使用指南針"));
+  } catch (e) { return toast(tr("無法啟用指南針")); }
   const onOri = (e) => {
     const h = e.webkitCompassHeading != null ? e.webkitCompassHeading : e.absolute && e.alpha != null ? 360 - e.alpha : null;
     if (h == null) return;
@@ -558,7 +573,7 @@ $("compassBtn").onclick = async () => {
   };
   addEventListener("ondeviceorientationabsolute" in window ? "deviceorientationabsolute" : "deviceorientation", onOri);
   $("compassBtn").hidden = true;
-  toast("把手機平放，上方的金色箭頭就是您面對的方向");
+  toast(tr("把手機平放，上方的金色箭頭就是您面對的方向"));
 };
 
 // ---------- birthday card ----------
@@ -566,29 +581,29 @@ $("cardDate").value = `${new Date().getFullYear() - 20}-01-01`;
 let lastCard = null, lastCardName = "";
 $("cardBtn").onclick = async () => {
   const v = $("cardDate").value;
-  if (!v) return toast("請先選擇日期");
-  $("cardBtn").disabled = true; $("cardBtn").textContent = "產生中…";
+  if (!v) return toast(tr("請先選擇日期"));
+  $("cardBtn").disabled = true; $("cardBtn").textContent = tr("產生中…");
   try {
     const d = new Date(`${v}T21:00`);
     const ms = A.moonState(d), idx = A.phaseIndex(ms.elong);
     const title = $("cardTitle").value.trim();
-    const special = eventsNear(d).map((e) => e.kind).join("・");
+    const special = eventsNear(d).map((e) => tr(e.kind)).join("・");
     const moonImage = await renderMoonImage(ms.elong, state.southern, 900).catch(() => null);
     lastCard = await buildCard({
       moonImage, svgFallback: moonImage ? null : moonSVG(ms.elong, 600, state.southern),
       dateText: `${title ? title + "｜" : ""}${d.toLocaleDateString(LOC, { year: "numeric", month: "long", day: "numeric" })}`,
-      lunarText: `農曆 ${C.lunarString(d, true)}`, phaseName: phaseLabel(idx), illum: ms.illum,
+      lunarText: tr`農曆 ${C.lunarString(d, true)}`, phaseName: phaseLabel(idx), illum: ms.illum,
       poem: C.poemFor(idx, d), special,
     });
     lastCardName = `moon-${v}.png`;
     $("cardImg").src = lastCard.toDataURL("image/png");
     $("cardOut").style.display = "block";
-  } finally { $("cardBtn").disabled = false; $("cardBtn").textContent = "產生卡片"; }
+  } finally { $("cardBtn").disabled = false; $("cardBtn").textContent = tr("產生卡片"); }
 };
 $("shareBtn").onclick = async () => {
   if (!lastCard) return;
   const r = await shareOrDownload(lastCard, lastCardName);
-  if (r === "downloaded") toast("圖片已下載");
+  if (r === "downloaded") toast(tr("圖片已下載"));
 };
 
 // ---------- calendar reminders (.ics) ----------
@@ -597,22 +612,22 @@ $("icsBtn").onclick = () => {
   const specials = A.specialMoons(start, end);
   const icsDate = (d) => `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
   const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
-  const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//moon-phase//zh-TW//", "CALSCALE:GREGORIAN", "X-WR-CALNAME:滿月提醒"];
+  const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//moon-phase//zh-TW//", "CALSCALE:GREGORIAN", tr("X-WR-CALNAME:滿月提醒")];
   for (let t = A.nextPhaseTime(start, 180); t < end; t = A.nextPhaseTime(new Date(t.getTime() + DAY), 180)) {
     const eve = new Date(t.getFullYear(), t.getMonth(), t.getDate() - (t.getHours() < 6 ? 1 : 0));
-    const tags = specials.filter((s) => Math.abs(s.date - t) < 2 * DAY && !/微型/.test(s.kind)).map((s) => s.kind);
-    const title = `今晚滿月${tags.length ? "・" + tags.join("・") : ""}`;
+    const tags = specials.filter((s) => Math.abs(s.date - t) < 2 * DAY && !/微型/.test(s.kind)).map((s) => tr(s.kind));
+    const title = tr`今晚滿月${tags.length ? "・" + tags.join("・") : ""}`;
     lines.push("BEGIN:VEVENT", `UID:full-${t.getTime()}@moon-phase-psi.vercel.app`, `DTSTAMP:${stamp}`,
       `DTSTART:${icsDate(eve)}T190000`, `DTEND:${icsDate(eve)}T200000`, `SUMMARY:${title}`,
-      `DESCRIPTION:滿月時刻：${fmtFull(t)}（${TZ}）\\n農曆 ${C.lunarString(t)}`,
+      tr`DESCRIPTION:滿月時刻：${fmtFull(t)}（${TZ}）\\n農曆 ${C.lunarString(t)}`,
       "BEGIN:VALARM", "TRIGGER:PT0M", "ACTION:DISPLAY", `DESCRIPTION:${title}`, "END:VALARM", "END:VEVENT");
   }
   lines.push("END:VCALENDAR");
   const blob = new Blob([lines.join("\r\n")], { type: "text/calendar;charset=utf-8" });
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob); a.download = "滿月提醒.ics"; a.click();
+  a.href = URL.createObjectURL(blob); a.download = tr("滿月提醒.ics"); a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-  toast("已下載行事曆檔，開啟即可加入（每次滿月晚上 7 點提醒）");
+  toast(tr("已下載行事曆檔，開啟即可加入（每次滿月晚上 7 點提醒）"));
 };
 
 // ---------- install (PWA) ----------
@@ -624,7 +639,7 @@ $("installBtn").onclick = async () => {
   await installEvt.userChoice; installEvt = null; $("installBtn").hidden = true;
 };
 const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
-if (!standalone && /iPhone|iPad|iPod/.test(navigator.userAgent)) $("installHint").textContent = "iPhone / iPad：點「分享」→「加入主畫面」即可安裝";
+if (!standalone && /iPhone|iPad|iPod/.test(navigator.userAgent)) $("installHint").textContent = tr("iPhone / iPad：點「分享」→「加入主畫面」即可安裝");
 if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
 // ---------- 玉兔 easter egg ----------
@@ -645,7 +660,7 @@ function hopRabbit() {
   }));
   const anim = r.animate(frames, { duration: 3600, easing: "linear" });
   anim.onfinish = () => { r.remove(); hopRabbit.busy = false; };
-  toast("玉兔：嫦娥說，今晚月色真美。");
+  toast(tr("玉兔：嫦娥說，今晚月色真美。"));
 }
 let taps = [];
 stage.addEventListener("click", () => {
@@ -660,6 +675,8 @@ if (A.phaseIndex(firstState.elong) === 4 && !sessionStorage.getItem("moon.rabbit
 }
 
 // ---------- start ----------
+state.southern = new URLSearchParams(location.search).get("hemi") === "S";
+$("hemi").value = state.southern ? "S" : "N";
 updateOffsetLabel();
 const qt = new URLSearchParams(location.search).get("t");
 if (qt && !isNaN(new Date(qt))) jumpTo(new Date(qt));

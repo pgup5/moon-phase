@@ -1,3 +1,4 @@
+import { tr, locale } from "./i18n.js";
 // Builds a 1080×1350 share image for a given night.
 export async function buildCard({ moonImage, svgFallback, dateText, lunarText, phaseName, illum, poem, special }) {
   const W = 1080, H = 1350;
@@ -36,21 +37,27 @@ export async function buildCard({ moonImage, svgFallback, dateText, lunarText, p
   x.textAlign = "center";
   x.fillStyle = "#e8ecff";
   x.font = '600 58px "Noto Serif TC","Songti TC","PMingLiU",serif';
-  x.fillText(dateText, cx, 880);
+  x.fillText(dateText, cx, 880, 960);
   x.fillStyle = "#9aa3c7";
   x.font = '36px "Noto Sans TC","PingFang TC",sans-serif';
-  x.fillText(lunarText, cx, 935);
+  x.fillText(lunarText, cx, 935, 960);
   x.fillStyle = "#ffd98a";
   x.font = '600 64px "Noto Serif TC","Songti TC",serif';
-  x.fillText(`${phaseName} · ${(illum * 100).toFixed(0)}%`, cx, 1025);
+  x.fillText(`${phaseName} · ${(illum * 100).toFixed(0)}%`, cx, 1025, 960);
   if (special) {
     x.fillStyle = "#ffb3c7";
     x.font = '34px "Noto Sans TC","PingFang TC",sans-serif';
-    x.fillText(special, cx, 1075);
+    x.fillText(special, cx, 1075, 960);
   }
   x.fillStyle = "#e8ecff";
   x.font = '40px "Noto Serif TC","Songti TC",serif';
-  const lines = poem.text.split(/(?<=[，。？！])/).reduce((acc, part) => {
+  if (locale === "en-US") x.font = '32px Georgia,serif';
+  const lines = locale === "en-US" ? poem.text.split(/\s+/).reduce((lines, word) => {
+    const last = lines.at(-1);
+    if (last && x.measureText(last + " " + word).width <= 960) lines[lines.length - 1] += " " + word;
+    else lines.push(word);
+    return lines;
+  }, []) : poem.text.split(/(?<=[，。？！])/).reduce((acc, part) => {
     const last = acc[acc.length - 1];
     if (last && (last + part).length <= 14) acc[acc.length - 1] = last + part; else acc.push(part);
     return acc;
@@ -59,10 +66,10 @@ export async function buildCard({ moonImage, svgFallback, dateText, lunarText, p
   lines.slice(0, 3).forEach((l, i) => x.fillText(l, cx, top + i * 56));
   x.fillStyle = "#9aa3c7";
   x.font = '30px "Noto Sans TC","PingFang TC",sans-serif';
-  x.fillText(`—— ${poem.author}《${poem.title}》`, cx, top + Math.min(lines.length, 3) * 56 + 8);
+  x.fillText(locale === "en-US" ? `— ${poem.author}, ${poem.title}` : `—— ${poem.author}《${poem.title}》`, cx, top + Math.min(lines.length, 3) * 56 + 8, 960);
   x.fillStyle = "rgba(255,255,255,.45)";
   x.font = '24px "Noto Sans TC",sans-serif';
-  x.fillText("月相查詢 · moon-phase-psi.vercel.app", cx, H - 36);
+  x.fillText(tr("月相查詢 · moon-phase-psi.vercel.app"), cx, H - 36);
   return c;
 }
 
@@ -70,7 +77,7 @@ export async function shareOrDownload(canvas, filename) {
   const blob = await new Promise((r) => canvas.toBlob(r, "image/png"));
   const file = new File([blob], filename, { type: "image/png" });
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
-    try { await navigator.share({ files: [file], title: "我的月亮" }); return "shared"; } catch (e) { if (e.name === "AbortError") return "cancelled"; }
+    try { await navigator.share({ files: [file], title: tr("我的月亮") }); return "shared"; } catch (e) { if (e.name === "AbortError") return "cancelled"; }
   }
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob); a.download = filename; a.click();

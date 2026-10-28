@@ -1,3 +1,5 @@
+import { tr, locale } from "./i18n.js";
+
 export const POEMS = [
   [ // 新月
     { text: "月黑雁飛高，單于夜遁逃。", author: "盧綸", title: "塞下曲" },
@@ -37,7 +39,8 @@ export const POEMS = [
 export function poemFor(phaseIdx, date) {
   const list = POEMS[phaseIdx];
   const day = Math.floor(date.getTime() / 86400000);
-  return list[day % list.length];
+  const poem = list[((day % list.length) + list.length) % list.length];
+  return { text: tr(poem.text), author: tr(poem.author), title: tr(poem.title) };
 }
 
 const DAY_NAMES = ["初一","初二","初三","初四","初五","初六","初七","初八","初九","初十",
@@ -90,6 +93,11 @@ export function lunarParts(date) {
 export function lunarString(date, withYear = false) {
   const l = lunarParts(date);
   if (!l) return "";
+  if (locale === "en-US") {
+    const animals = ["Rat", "Ox", "Tiger", "Rabbit", "Dragon", "Snake", "Horse", "Goat", "Monkey", "Rooster", "Dog", "Pig"];
+    const md = `${l.leap ? "Leap month" : "Month"} ${l.month}, day ${l.day}`;
+    return withYear ? `Year of the ${animals[ANIMALS.indexOf(l.animal)]} · ${md}` : md;
+  }
   const md = `${l.leap ? "閏" : ""}${MONTH_NAMES[l.month - 1]}月${DAY_NAMES[l.day - 1]}`;
   return withYear && l.yearName ? `${l.yearName}${l.animal}年 ${md}` : md;
 }
@@ -139,5 +147,6 @@ export function festivalOf(l) {
 
 export function dayLabel(l) {
   if (!l) return "";
+  if (locale === "en-US") return l.day === 1 ? `${l.leap ? "Leap " : ""}M${l.month}` : `D${l.day}`;
   return l.day === 1 ? `${l.leap ? "閏" : ""}${MONTH_NAMES[l.month - 1]}月` : DAY_NAMES[l.day - 1];
 }
