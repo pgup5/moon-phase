@@ -1,7 +1,7 @@
-const CACHE = "moon-v4";
+const CACHE = "moon-v5";
 const ASSETS = [
   "./", "index.html", "css/style.css", "manifest.webmanifest",
-  "js/app.js", "js/astro.js", "js/culture.js", "js/sky.js", "js/moon3d.js", "js/card.js", "js/launches.js",
+  "js/app.js", "js/astro.js", "js/culture.js", "js/sky.js", "js/moon3d.js", "js/card.js", "js/launches.js", "js/viewing-score.js",
   "vendor/three.module.min.js", "textures/moon_color_2k.jpg", "textures/moon_disp_1k.jpg",
   "icons/icon-192.png", "icons/icon-512.png",
 ];

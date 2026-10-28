@@ -4,6 +4,7 @@ import { initSky } from "./sky.js";
 import { createMoon, renderMoonImage } from "./moon3d.js";
 import { buildCard, shareOrDownload } from "./card.js";
 import { getLaunches, CATEGORIES } from "./launches.js";
+import { getViewingWeather, viewingScore } from "./viewing-score.js";
 
 const LOC = "zh-TW";
 const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -159,7 +160,7 @@ const scheduleRender = (force) => { cancelAnimationFrame(raf); raf = requestAnim
 let lastViewingKey = "";
 function renderViewing(d) {
   const { lat, lon, name } = state.loc;
-  const key = `view${dayKey(d)}:${lat}:${lon}:${name}`;
+  const key = `view${dayKey(d)}:${lat}:${lon}:${name}:${Math.floor(Date.now() / (30 * 60000))}`;
   if (key === lastViewingKey) return;
   lastViewingKey = key;
   const windows = cached(key, () => A.viewingWindows(d, lat, lon));
@@ -168,6 +169,38 @@ function renderViewing(d) {
   $("viewingWindows").innerHTML = windows.length ? windows.map((w) =>
     `<div class="item"><span><b>${time(w.start)} — ${time(w.end)}</b><br><small>月亮最高：${time(w.peak)} · 高度 ${w.altitude.toFixed(0)}° · ${dirName(w.azimuth)}方</small></span></div>`
   ).join("") : '<div class="when">這一晚沒有符合條件的賞月時段。可切換日期，或使用您的位置重新計算。</div>';
+  renderViewingScore(d, windows, lat, lon, key);
+}
+
+async function renderViewingScore(d, windows, lat, lon, key) {
+  const tonight = dayKey(d) === dayKey(new Date());
+  $("viewingScoreTitle").textContent = tonight ? "今晚賞月評分" : "所選夜晚賞月評分";
+  const show = (result, note) => {
+    if (key !== lastViewingKey) return;
+    $("viewingScoreValue").textContent = result ? `${result.score} / 100` : "—";
+    $("viewingScoreLabel").textContent = !result ? "沒有符合條件的時段"
+      : result.score >= 80 ? "很適合賞月" : result.score >= 60 ? "適合賞月"
+      : result.score >= 40 ? "條件普通" : "賞月條件較差";
+    $("viewingScoreDetails").textContent = result
+      ? `建議觀賞：${fmtShort(result.date)} · 月亮高度 ${result.altitude.toFixed(0)}° · 照明 ${(result.illumination * 100).toFixed(0)}%`
+        + (result.forecast ? ` · 雲量 ${result.forecast.cloud}% · 降雨機率 ${result.forecast.rain}%` : "") : "可切換日期，看看其他夜晚。";
+    $("viewingScoreNote").textContent = note;
+  };
+  const astronomy = viewingScore(windows, lat, lon);
+  if (!astronomy) { show(null, "無適合時段，不計分。"); return; }
+  const now = Date.now();
+  if (+windows[0].start < now - DAY || +windows[windows.length - 1].end > now + 15 * DAY) {
+    show(astronomy, "僅天文評分：所選夜晚不在可用預報範圍內，未納入天氣。");
+    return;
+  }
+  show(astronomy, "正在取得天氣預報，目前顯示天文評分…");
+  try {
+    const weather = await getViewingWeather(lat, lon);
+    const result = viewingScore(windows, lat, lon, weather);
+    show(result, result.forecast ? "已納入賞月時段的逐時天氣預報。" : "僅天文評分：預報資料未完整涵蓋賞月時段。");
+  } catch {
+    show(astronomy, "僅天文評分：暫時無法取得天氣，請稍後重新整理。");
+  }
 }
 
 // ---------- where is the moon ----------
