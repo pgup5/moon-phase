@@ -103,6 +103,35 @@ export function riseSet(date, lat, lon, body = "moon") {
   return { rise, set, alwaysUp: !rise && !set && f0 > 0, alwaysDown: !rise && !set && f0 <= 0 };
 }
 
+// An observing night spans local noon to the following local noon, including DST.
+// One-minute midpoint samples make interval boundaries accurate to about a minute.
+export function viewingWindows(date, lat, lon) {
+  const start = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12);
+  const end = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1, 12);
+  const windows = [];
+  let current = null;
+  for (let t = +start; t < +end; t += 60000) {
+    const sample = new Date(t + 30000);
+    const moon = moonPosition(sample, lat, lon);
+    const suitable = sunPosition(sample, lat, lon).alt <= -6
+      && moon.alt >= 20 && moonState(sample).illum >= 0.01;
+    if (suitable) {
+      if (!current) current = { start: new Date(t), end: null, peak: sample, altitude: moon.alt, azimuth: moon.az };
+      current.end = new Date(Math.min(t + 60000, +end));
+      if (moon.alt > current.altitude) {
+        current.peak = sample;
+        current.altitude = moon.alt;
+        current.azimuth = moon.az;
+      }
+    } else if (current) {
+      windows.push(current);
+      current = null;
+    }
+  }
+  if (current) windows.push(current);
+  return windows;
+}
+
 export const PHASES = [
   { name: "新月", alias: "朔" },
   { name: "眉月", alias: "蛾眉月" },

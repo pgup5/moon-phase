@@ -141,6 +141,7 @@ function render(force = false) {
   }
 
   renderWhere(d);
+  renderViewing(d);
 
   if (force || dk !== lastDay) {
     lastDay = dk;
@@ -153,6 +154,21 @@ function render(force = false) {
 
 let raf = 0;
 const scheduleRender = (force) => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => render(force)); };
+
+// ---------- best moon-viewing windows ----------
+let lastViewingKey = "";
+function renderViewing(d) {
+  const { lat, lon, name } = state.loc;
+  const key = `view${dayKey(d)}:${lat}:${lon}:${name}`;
+  if (key === lastViewingKey) return;
+  lastViewingKey = key;
+  const windows = cached(key, () => A.viewingWindows(d, lat, lon));
+  $("viewingContext").textContent = `${fmtDate(d)}夜間 · ${name} · ${TZ}`;
+  const time = (t) => `${dayKey(t) !== dayKey(d) ? "翌日 " : ""}${fmtTime(t)}`;
+  $("viewingWindows").innerHTML = windows.length ? windows.map((w) =>
+    `<div class="item"><span><b>${time(w.start)} — ${time(w.end)}</b><br><small>月亮最高：${time(w.peak)} · 高度 ${w.altitude.toFixed(0)}° · ${dirName(w.azimuth)}方</small></span></div>`
+  ).join("") : '<div class="when">這一晚沒有符合條件的賞月時段。可切換日期，或使用您的位置重新計算。</div>';
+}
 
 // ---------- where is the moon ----------
 function renderWhere(d) {

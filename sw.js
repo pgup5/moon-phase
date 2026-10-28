@@ -1,4 +1,4 @@
-const CACHE = "moon-v3";
+const CACHE = "moon-v4";
 const ASSETS = [
   "./", "index.html", "css/style.css", "manifest.webmanifest",
   "js/app.js", "js/astro.js", "js/culture.js", "js/sky.js", "js/moon3d.js", "js/card.js", "js/launches.js",
