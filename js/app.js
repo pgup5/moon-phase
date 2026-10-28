@@ -6,6 +6,8 @@ import { buildCard, shareOrDownload } from "./card.js";
 import { getLaunches, CATEGORIES } from "./launches.js";
 import { getViewingWeather, viewingScore } from "./viewing-score.js";
 
+import { moonPath, moonPathSVG, moonPathMarker } from "./moon-path.js";
+
 const LOC = "zh-TW";
 const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
 const DAY = 86400000;
@@ -143,6 +145,7 @@ function render(force = false) {
 
   renderWhere(d);
   renderViewing(d);
+  renderMoonPath(d);
 
   if (force || dk !== lastDay) {
     lastDay = dk;
@@ -155,6 +158,43 @@ function render(force = false) {
 
 let raf = 0;
 const scheduleRender = (force) => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => render(force)); };
+
+// ---------- nightly moon path ----------
+let pathKey = "", pathData = null, pathPreview = false;
+function renderMoonPath(d) {
+  const { lat, lon, name } = state.loc;
+  const key = `${dayKey(d)}:${lat}:${lon}`;
+  if (key !== pathKey) {
+    pathKey = key; pathPreview = false;
+    pathData = moonPath(d, lat, lon);
+    $("moonPathChart").innerHTML = moonPathSVG(pathData);
+    $("moonPathSlider").max = Math.round((pathData.end - pathData.start) / 60000);
+    const events = [...pathData.crossings];
+    if (pathData.peak) events.push({ ...pathData.peak, kind: "最高點" });
+    events.sort((a, b) => a.t - b.t);
+    $("moonPathEvents").innerHTML = events.length ? events.map((p) =>
+      `<div class="item"><span><b>${p.kind}</b><br><small>${fmtShort(new Date(p.t))}</small></span><span>${dirName(p.az)}方 ${p.az.toFixed(0)}°<br><small>高度 ${Math.max(0, p.alt).toFixed(0)}°</small></span></div>`
+    ).join("") : '<p class="when">這段時間月亮都在地平線下。</p>';
+  }
+  $("moonPathTitle").textContent = dayKey(d) === dayKey(new Date()) ? "今晚月亮路徑" : "所選夜晚月亮路徑";
+  $("moonPathContext").textContent = `${name} · ${fmtShort(new Date(pathData.start))} — ${fmtShort(new Date(pathData.end))}`;
+  if (!pathPreview) {
+    $("moonPathSlider").value = Math.max(0, Math.min(+$("moonPathSlider").max, Math.round((+d - pathData.start) / 60000)));
+    updateMoonPathPosition(d);
+  }
+}
+function updateMoonPathPosition(date) {
+  const inRange = +date >= pathData.start && +date <= pathData.end;
+  const p = moonPathMarker(date, state.loc.lat, state.loc.lon);
+  $("moonPathMarker").innerHTML = inRange ? p.svg : "";
+  $("moonPathPosition").textContent = `${pathPreview ? "預覽" : "所選時間"}：${fmtShort(date)} · ${dirName(p.az)}方 ${p.az.toFixed(0)}° · 高度 ${p.alt.toFixed(0)}°`
+    + (!inRange ? "（不在這晚路徑範圍內，拖曳可預覽）" : p.alt < 0 ? "（地平線下）" : "");
+}
+$("moonPathSlider").addEventListener("input", () => {
+  pathPreview = true;
+  updateMoonPathPosition(new Date(pathData.start + +$("moonPathSlider").value * 60000));
+});
+$("moonPathReset").onclick = () => { pathPreview = false; renderMoonPath(target()); };
 
 // ---------- best moon-viewing windows ----------
 let lastViewingKey = "";

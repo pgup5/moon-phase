@@ -92,3 +92,15 @@ h2 small.muted { font-size:.75rem; font-weight:400; color:var(--muted); }
 .filters button small { color:var(--muted); }
 .filters button[aria-pressed="true"] { background:rgba(255,217,138,.18); border-color:var(--accent); color:var(--accent); }
 .item.launch .badge { font-size:.7rem; padding:0 7px; vertical-align:2px; }
+
+.moon-path-layout { display:grid; grid-template-columns:minmax(240px,400px) 1fr; gap:24px; align-items:center; }
+.moon-path-chart { display:block; width:100%; max-width:400px; margin:auto; color:var(--accent); }
+.path-grid { fill:none; stroke:var(--line); stroke-width:1; }
+.path-alt, .path-hour { fill:var(--muted); font-size:11px; }
+.path-directions { fill:var(--fg); font-size:16px; text-anchor:middle; }
+.path-night, .path-day { fill:none; stroke:var(--accent); stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
+.path-day { stroke:#8991b3; stroke-width:2; stroke-dasharray:5 5; }
+.path-event { fill:#11172d; stroke:var(--accent); stroke-width:2; }
+.path-marker { fill:#fff8de; stroke:#fff; stroke-width:1; }
+.path-marker-halo { fill:rgba(255,217,138,.25); }
+@media (max-width:640px) { .moon-path-layout { grid-template-columns:1fr; gap:12px; } }
