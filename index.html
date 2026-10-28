@@ -62,6 +62,20 @@
   </section>
 
   <section class="card">
+    <h2 id="viewingWeekTitle">未來七晚賞月比較</h2>
+    <p class="when" id="viewingWeekContext"></p>
+    <p class="when" id="viewingWeekStatus" role="status" aria-live="polite"></p>
+    <div class="viewing-week-scroll" role="region" aria-label="七晚賞月比較表，可左右捲動" tabindex="0">
+      <table class="viewing-week">
+        <caption class="sr-only">七晚月相、賞月時段、天氣與評分比較</caption>
+        <thead><tr><th scope="col">夜晚 / 月相</th><th scope="col">適合時段</th><th scope="col">建議觀賞 / 天氣</th><th scope="col">評分</th></tr></thead>
+        <tbody id="viewingWeekRows"></tbody>
+      </table>
+    </div>
+    <p class="src">從所選日期起連續七晚，每晚以當日中午至隔日中午計算。天氣為建議觀賞時間的逐時預報；各晚皆有完整預報才以含天氣評分比較，否則全部使用天文評分。最高分夜晚會標示，同分並列；點選日期可查看當晚詳情。評分方法與天氣來源同上。</p>
+  </section>
+
+  <section class="card">
     <h2>時光旅行 <span class="live" id="liveTag">即時</span><span class="spacer"></span>
       <button id="nowBtn">回到現在</button></h2>
     <div class="row">

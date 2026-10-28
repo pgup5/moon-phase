@@ -8,6 +8,7 @@ Live site: https://moon-phase-psi.vercel.app
 - Realistic 3D moon (Three.js + NASA LRO textures), lit from the real Sun direction; drag to spin
 - Time-travel slider with play animation (±30 days, continuous playback)
 - Where the moon is: altitude/azimuth sky compass, moonrise/moonset, sunrise/sunset, device compass on phones
+- Seven-night viewing comparison: phases, observing windows, hourly weather, comparable scores, and links to nightly details
 - Nightly moon path: sky map, rise/set directions, highest point, and a time preview slider (local noon to next noon)
 - Chinese culture: 農曆 date, 二十四節氣, festivals (春節、元宵、端午、七夕、中元、中秋、重陽、除夕), poems by phase, 玉兔 easter egg (tap the moon 5×)
 - Live sky background that follows the real Sun altitude, with parallax stars and shooting stars

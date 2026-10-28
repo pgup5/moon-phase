@@ -8,6 +8,8 @@ import { getViewingWeather, viewingScore } from "./viewing-score.js";
 
 import { moonPath, moonPathSVG, moonPathMarker } from "./moon-path.js";
 
+import { viewingWeek, scoreViewingWeek } from "./viewing-week.js";
+
 const LOC = "zh-TW";
 const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
 const DAY = 86400000;
@@ -146,6 +148,7 @@ function render(force = false) {
   renderWhere(d);
   renderViewing(d);
   renderMoonPath(d);
+  renderViewingWeek(d);
 
   if (force || dk !== lastDay) {
     lastDay = dk;
@@ -242,6 +245,57 @@ async function renderViewingScore(d, windows, lat, lon, key) {
     show(astronomy, "僅天文評分：暫時無法取得天氣，請稍後重新整理。");
   }
 }
+
+// ---------- seven-night comparison ----------
+let lastWeekKey = "";
+async function renderViewingWeek(d) {
+  const { lat, lon, name } = state.loc;
+  const key = `${dayKey(d)}:${lat}:${lon}:${Math.floor(Date.now() / (30 * 60000))}`;
+  if (key === lastWeekKey) return;
+  lastWeekKey = key;
+  const nights = cached(`week:${dayKey(d)}:${lat}:${lon}`, () => viewingWeek(d, lat, lon));
+  $("viewingWeekTitle").textContent = dayKey(d) === dayKey(new Date()) ? "未來七晚賞月比較" : "所選日起七晚賞月比較";
+  $("viewingWeekContext").textContent = `${fmtDate(nights[0].night)} — ${fmtDate(nights[6].night)} · ${name} · ${TZ}`;
+  const show = (comparison, message) => {
+    if (key !== lastWeekKey) return;
+    $("viewingWeekStatus").textContent = message;
+    $("viewingWeekRows").innerHTML = comparison.rows.map((n) => {
+      const time = (t) => `${dayKey(t) !== dayKey(n.night) ? "翌日 " : ""}${fmtTime(t)}`;
+      const r = n.result;
+      const weather = r?.forecast;
+      return `<tr${n.best ? ' class="week-best"' : ""}>
+        <th scope="row"><button data-week-time="${+n.night}">${n.night.toLocaleDateString(LOC, { month: "numeric", day: "numeric", weekday: "short" })}</button><small>${phaseLabel(n.phase)} · 照明 ${(n.moon.illum * 100).toFixed(0)}%</small>${n.best ? '<span class="badge">七晚最高分</span>' : ""}</th>
+        <td>${n.windows.length ? n.windows.map((w) => `${time(w.start)} — ${time(w.end)}`).join("<br>") : "無符合條件時段"}</td>
+        <td>${r ? `${time(r.date)}<small>${weather ? `雲量 ${weather.cloud}% · 降雨機率 ${weather.rain}%` : "未納入天氣"}</small>` : "—"}</td>
+        <td>${r ? `<strong>${r.score}</strong> / 100<small>${comparison.weatherIncluded ? "含天氣" : "僅天文"}</small>` : "—"}</td>
+      </tr>`;
+    }).join("");
+  };
+  const astronomy = scoreViewingWeek(nights, lat, lon);
+  if (!astronomy.rows.some((n) => n.result)) {
+    show(astronomy, "這七晚沒有符合條件的賞月時段，可切換日期或地點。");
+    return;
+  }
+  const now = Date.now();
+  if (+nights[0].night < now - DAY || +nights[6].night > now + 14 * DAY) {
+    show(astronomy, "僅天文比較：日期不在完整的天氣預報範圍內。");
+    return;
+  }
+  show(astronomy, "正在取得天氣預報，目前七晚皆顯示天文評分…");
+  try {
+    const weather = await getViewingWeather(lat, lon);
+    const comparison = scoreViewingWeek(nights, lat, lon, weather);
+    show(comparison, comparison.weatherIncluded ? "七晚採用相同評分方式，已納入逐時天氣預報。" : "預報未完整涵蓋所有賞月時段，七晚統一使用天文評分。");
+  } catch {
+    show(astronomy, "暫時無法取得天氣，七晚統一使用天文評分。");
+  }
+}
+$("viewingWeekRows").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-week-time]");
+  if (!button) return;
+  jumpTo(new Date(+button.dataset.weekTime));
+  $("viewingContext").closest("section").scrollIntoView({ behavior: "smooth", block: "start" });
+});
 
 // ---------- where is the moon ----------
 function renderWhere(d) {
