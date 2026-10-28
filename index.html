@@ -47,13 +47,18 @@
   <section class="card">
     <h2>最佳賞月時段</h2>
     <p class="when" id="viewingContext"></p>
+    <div class="list" id="viewingWindows"></div>
+    <p class="src">以所選日期中午至隔日中午為一晚，篩選太陽低於地平線 6°、月亮高度至少 20° 且照明比例至少 1% 的時段。時間依您的裝置時區顯示，約精確至 1 分鐘；未納入天氣、地形與建築遮蔽。</p>
+  </section>
+
+  <section class="card">
+    <h2 id="viewingScoreTitle">今晚賞月評分</h2>
     <div class="viewing-score" role="status" aria-live="polite">
-      <div><span id="viewingScoreTitle">今晚賞月評分</span><strong id="viewingScoreValue">—</strong><span id="viewingScoreLabel"></span></div>
+      <div><strong id="viewingScoreValue">—</strong><span id="viewingScoreLabel"></span></div>
       <p class="when" id="viewingScoreDetails"></p>
       <p class="src" id="viewingScoreNote"></p>
     </div>
-    <div class="list" id="viewingWindows"></div>
-    <p class="src">以所選日期中午至隔日中午為一晚，篩選太陽低於地平線 6°、月亮高度至少 20° 且照明比例至少 1% 的時段。時間依您的裝置時區顯示，約精確至 1 分鐘。評分取候選時間的最高分，以高度（70%）與照明（30%）為基礎，依雲量及降雨機率各最多折減 80%；為本站賞月參考指數，非看見月亮的機率，未納入地形與建築遮蔽。天氣來源：<a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>，快取 30 分鐘。</p>
+    <p class="src">評分取最佳賞月時段中候選時間的最高分，以高度（70%）與照明（30%）為基礎，依雲量及降雨機率各最多折減 80%；為本站賞月參考指數，非看見月亮的機率，未納入地形與建築遮蔽。天氣來源：<a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>，快取 30 分鐘。</p>
   </section>
 
   <section class="card">
