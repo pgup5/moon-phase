@@ -55,6 +55,25 @@
   </section>
 
   <section class="card">
+    <h2>月亮在哪裡？<span class="spacer"></span>
+      <button id="locBtn">📍 使用我的位置</button><button id="compassBtn" hidden>🧭 啟用指南針</button></h2>
+    <div class="where">
+      <svg class="compass" id="compass" viewBox="0 0 220 220" aria-label="月亮方位"></svg>
+      <div>
+        <div class="when" id="locName"></div>
+        <div class="stats" style="margin-top:8px">
+          <span>月亮方位</span><span id="moonAz"></span>
+          <span>月亮高度</span><span id="moonAlt"></span>
+          <span>月出</span><span id="moonRise"></span>
+          <span>月落</span><span id="moonSet"></span>
+          <span>日出 / 日落</span><span id="sunRS"></span>
+        </div>
+        <div class="when" id="visTip" style="margin-top:8px"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
     <h2 id="viewingScoreTitle">今晚賞月評分</h2>
     <div class="viewing-score" role="status" aria-live="polite">
       <div><strong id="viewingScoreValue">—</strong><span id="viewingScoreLabel"></span></div>
@@ -94,25 +113,6 @@
       </div>
       <input type="range" id="slider" min="-720" max="720" step="1" value="0" aria-label="時間偏移（小時）">
       <div class="slider-labels"><span>−30 天</span><span>拖曳看月亮盈虧</span><span>+30 天</span></div>
-    </div>
-  </section>
-
-  <section class="card">
-    <h2>月亮在哪裡？<span class="spacer"></span>
-      <button id="locBtn">📍 使用我的位置</button><button id="compassBtn" hidden>🧭 啟用指南針</button></h2>
-    <div class="where">
-      <svg class="compass" id="compass" viewBox="0 0 220 220" aria-label="月亮方位"></svg>
-      <div>
-        <div class="when" id="locName"></div>
-        <div class="stats" style="margin-top:8px">
-          <span>月亮方位</span><span id="moonAz"></span>
-          <span>月亮高度</span><span id="moonAlt"></span>
-          <span>月出</span><span id="moonRise"></span>
-          <span>月落</span><span id="moonSet"></span>
-          <span>日出 / 日落</span><span id="sunRS"></span>
-        </div>
-        <div class="when" id="visTip" style="margin-top:8px"></div>
-      </div>
     </div>
   </section>
 
