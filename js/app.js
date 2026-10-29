@@ -11,6 +11,9 @@ import { moonPath, moonPathSVG, moonPathMarker } from "./moon-path.js";
 
 import { viewingWeek, scoreViewingWeek } from "./viewing-week.js";
 
+import { initExplorationTools } from "./exploration-tools.js";
+import { photoGuide, photoAdvice } from "./photo-guide.js";
+
 initializeLanguage();
 const LOC = locale;
 const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -147,6 +150,8 @@ function render(force = false) {
     if (fest && fest.name === "中秋節") setTimeout(hopRabbit, 800);
   }
 
+  explorationTools?.update();
+  renderPhotoGuide(d, ms);
   renderWhere(d);
   renderViewing(d);
   renderMoonPath(d);
@@ -163,6 +168,28 @@ function render(force = false) {
 
 let raf = 0;
 const scheduleRender = (force) => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => render(force)); };
+
+// ---------- moon photography ----------
+function renderPhotoGuide(d, ms) {
+  const english = locale === "en-US";
+  const t = (zh, en) => english ? en : zh;
+  const mp = A.moonPosition(d, state.loc.lat, state.loc.lon);
+  const sp = A.sunPosition(d, state.loc.lat, state.loc.lon);
+  const guide = photoGuide(ms.illum, $("photoDevice").value);
+  const advice = photoAdvice(guide, english);
+  $("photoContext").textContent = `${fmtFull(d)} · ${tr(state.loc.name)} · ${phaseLabel(A.phaseIndex(ms.elong))} · ${(ms.illum * 100).toFixed(1)}%`;
+  $("photoVisibility").textContent = mp.alt <= 0
+    ? t("月亮目前在地平線下，請查看月出時間或切換日期與時間。", "The Moon is below the horizon. Check moonrise or choose another date and time.")
+    : `${dirName(mp.az)} ${mp.az.toFixed(0)}° · ${t("高度", "Altitude")} ${mp.alt.toFixed(0)}° · ` + (sp.alt > 0
+      ? t("目前是白天，月亮對比較低。", "Daylight reduces lunar contrast.")
+      : mp.alt < 20 ? t("月亮位置偏低，先確認前方沒有建築或山稜遮擋。", "The Moon is low; check for buildings or ridges in front of you.")
+      : t("可嘗試月面特寫，實際清晰度仍取決於雲量與大氣擾動。", "Try lunar close-ups; clouds and atmospheric turbulence still affect sharpness."));
+  $("photoSubject").textContent = advice.subject;
+  $("photoSettings").textContent = advice.settings;
+  $("photoTechnique").textContent = advice.technique;
+  $("photoComposition").textContent = t("地景取景：利用上方月出／月落時間與天空路徑預覽方向，提前找好前景；低空月亮適合與地標同框，高空較方便拍月面細節。", "Plan landscape framing with the moonrise/moonset times and sky-path preview above. Scout your foreground: a low Moon fits landmarks, while a higher Moon is useful for surface detail.");
+}
+$("photoDevice").addEventListener("change", () => scheduleRender());
 
 // ---------- nightly moon path ----------
 let pathKey = "", pathData = null, pathPreview = false;
@@ -675,6 +702,19 @@ if (A.phaseIndex(firstState.elong) === 4 && !sessionStorage.getItem("moon.rabbit
 }
 
 // ---------- start ----------
+let explorationTools = null;
+explorationTools = initExplorationTools({
+  date: target,
+  location: () => state.loc,
+  southern: () => state.southern,
+  jump: (date, location) => {
+    state.loc = { ...location, name: locale === "en-US" ? "Planned camera position" : "規劃拍攝點" };
+    localStorage.setItem("moon.loc", JSON.stringify(state.loc));
+    memo.clear();
+    jumpTo(date);
+    $("moonStage").scrollIntoView({ behavior: "smooth", block: "center" });
+  },
+});
 state.southern = new URLSearchParams(location.search).get("hemi") === "S";
 $("hemi").value = state.southern ? "S" : "N";
 updateOffsetLabel();

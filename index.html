@@ -133,6 +133,25 @@
     <p class="src">俯看天空：北上、東右，外圈為地平線，中心為天頂。金色實線為太陽低於 −6° 的夜間路徑；灰色虛線為暮光及白天。圓點標示升落與最高點，亮點為預覽位置；僅繪出地平線以上的路徑。升落以月心通過幾何地平線計算，與上方含折射的月出月落時間略有差異；未納入地形與建築遮蔽。</p>
   </section>
 
+  <section class="card" aria-labelledby="photoTitle">
+    <h2 id="photoTitle">月亮拍攝助手</h2>
+    <p class="when" id="photoContext"></p>
+    <div class="row">
+      <label for="photoDevice">拍攝設備</label>
+      <select id="photoDevice"><option value="phone">手機</option><option value="camera">相機</option></select>
+    </div>
+    <p class="when" id="photoVisibility" role="status"></p>
+    <div class="grid2 photo-tips">
+      <div><h3>月相與構圖</h3><p id="photoSubject"></p><p id="photoComposition"></p></div>
+      <div><h3>拍攝設定</h3><p id="photoSettings"></p><p id="photoTechnique"></p></div>
+    </div>
+    <p class="src">建議隨所選時間與位置更新；未納入天氣與地形遮蔽。地景與月面亮度差異大，可分別曝光。參考：<a href="https://science.nasa.gov/moon/photography-guide/" target="_blank" rel="noopener">NASA 拍月指南</a>、<a href="https://www.nikonusa.com/learn-and-explore/c/tips-and-techniques/how-to-photograph-the-moon" target="_blank" rel="noopener">Nikon</a>。</p>
+  </section>
+
+  <section class="card" id="landscapePlanner"></section>
+
+  <section class="card" id="moonExplorer"></section>
+
   <section class="card">
     <h2>即將到來的主要月相</h2>
     <div class="upcoming" id="upcoming"></div>

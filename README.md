@@ -5,6 +5,9 @@ A Traditional Chinese moon experience that works from the visitor's current date
 Live site: https://moon-phase-psi.vercel.app
 
 ## Features
+- Landscape alignment planner: editable camera/landmark coordinates, optional OpenStreetMap point selection, height-aware closest approach times and time/location preview
+- Interactive lunar near-side diagram: lunar seas, craters and Apollo 11 with source links, approximate phase lighting and hemisphere orientation
+- Moon photography assistant: phone/camera guidance follows the selected phase, time and location, with exposure starting points and composition tips
 - Traditional Chinese by default, with an English language switch that remembers your choice; `?lang=en` and `?lang=zh-Hant` also work
 - Realistic 3D moon (Three.js + NASA LRO textures), lit from the real Sun direction; drag to spin
 - Time-travel slider with play animation (±30 days, continuous playback)

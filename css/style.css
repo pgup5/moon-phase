@@ -122,3 +122,28 @@ h2 small.muted { font-size:.75rem; font-weight:400; color:var(--muted); }
 html[lang=en] h1 { letter-spacing:.04em; }
 html[lang=en] .stats { max-width:100%; }
 html[lang=en] .cal .tag { font-size:.6rem; overflow-wrap:anywhere; }
+
+.photo-tips { margin-top:16px; }
+.photo-tips h3 { margin:0 0 8px; font-size:1rem; color:var(--accent); }
+.photo-tips p { line-height:1.75; margin:0 0 12px; }
+
+#alignmentForm fieldset { border:1px solid var(--line); border-radius:12px; margin:14px 0; padding:12px; min-width:0; }
+.planner-inputs { display:flex; flex-wrap:wrap; gap:12px; align-items:end; }
+.planner-inputs label { display:grid; gap:6px; flex:1 1 150px; }
+.planner-inputs input { width:100%; min-width:0; }
+#plannerMapDetails { margin:16px 0; }
+#plannerMapDetails summary { cursor:pointer; }
+.map-controls { margin:12px 0; }
+.planner-map { position:relative; height:340px; overflow:hidden; background:#1d2941; cursor:crosshair; border-radius:12px; }
+#plannerTiles img { position:absolute; width:256px; height:256px; max-width:none; }
+#plannerOverlay { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+.map-credit { position:absolute; right:0; bottom:0; background:#10172deb; font-size:.75rem; padding:3px 6px; cursor:auto; }
+#alignmentResults .item { align-items:center; flex-wrap:wrap; }
+.explorer-layout { display:grid; grid-template-columns:minmax(240px,1fr) 1fr; gap:24px; align-items:center; }
+#lunarMap { width:100%; max-width:440px; display:block; margin:auto; }
+#lunarMap [role=button] { cursor:pointer; }
+#lunarMap [role=button]:focus { outline:none; }
+#lunarMap [role=button]:focus circle { stroke:#ffb3c7; stroke-width:5; }
+.lunar-detail { line-height:1.75; }
+.lunar-detail h3 { margin:12px 0 4px; color:var(--accent); }
+@media(max-width:640px) { .explorer-layout { grid-template-columns:1fr; } }

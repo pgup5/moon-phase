@@ -1,5 +1,14 @@
 // English messages keyed by the original Traditional Chinese text.
 export default {
+  "月亮拍攝助手": "Moon photography assistant",
+  "拍攝設備": "Equipment",
+  "手機": "Phone",
+  "相機": "Camera",
+  "月相與構圖": "Phase and composition",
+  "拍攝設定": "Camera settings",
+  "建議隨所選時間與位置更新；未納入天氣與地形遮蔽。地景與月面亮度差異大，可分別曝光。參考：": "Advice follows the selected time and location; weather and terrain obstructions are not included. The landscape and lunar surface may need separate exposures. References: ",
+  "NASA 拍月指南": "NASA lunar photography guide",
+
   "台北（預設位置）": "Taipei (default location)",
   "北": "N",
   "北北東": "NNE",
