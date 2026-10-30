@@ -43,8 +43,7 @@ const dayKey = (d) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 const daysFrom = (d, from) => Math.round((d - from) / DAY);
 function tzText(d) {
   const off = -d.getTimezoneOffset(), sign = off >= 0 ? "+" : "-", a = Math.abs(off);
-  const name = (new Intl.DateTimeFormat(LOC, { timeZoneName: "long" }).formatToParts(d).find((p) => p.type === "timeZoneName") || {}).value || "";
-  return `${TZ}｜${name}｜UTC${sign}${pad(Math.floor(a / 60))}:${pad(a % 60)}`;
+  return `UTC${sign}${Math.floor(a / 60)}:${pad(a % 60)}`;
 }
 const DIRS = [tr("北"), tr("北北東"), tr("東北"), tr("東北東"), tr("東"), tr("東南東"), tr("東南"), tr("南南東"), tr("南"), tr("南南西"), tr("西南"), tr("西南西"), tr("西"), tr("西北西"), tr("西北"), tr("北北西")];
 const dirName = (az) => DIRS[Math.round(az / 22.5) % 16];
@@ -113,8 +112,7 @@ let lastDay = "", lastMonthKey = "";
 function render(force = false) {
   const now = new Date();
   const d = target();
-  $("clock").textContent = tr`現在時間：${fmtFull(now)}`;
-  $("tzInfo").textContent = tr`您的時區：${tzText(now)}`;
+  $("clock").textContent = tr`現在時間：${fmtFull(now)}` + ` ${tzText(now)}`;
   $("tz").textContent = TZ;
   $("liveTag").textContent = state.live && !state.offsetH ? tr("即時") : tr("時光旅行中");
   $("liveTag").classList.toggle("off", !(state.live && !state.offsetH));
