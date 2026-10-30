@@ -9,9 +9,9 @@ export function initializeMobileLayout() {
   const main = document.querySelector('main');
   const section = id => $(id).closest('section');
   const groups = {
-    tonight: [document.querySelector('.hero'), section('viewingContext'), section('locName'), section('icsBtn')],
-    plan: [section('photoTitle'), $('landscapePlanner'), section('moonPathTitle')],
-    explore: [$('moonExplorer'), section('cardDate'), section('launches')],
+    tonight: [document.querySelector('.hero'), section('viewingContext'), section('locName'), $('challengeCard'), section('icsBtn')],
+    plan: [section('photoTitle'), $('earthshineCard'), $('landscapePlanner'), section('moonPathTitle')],
+    explore: [section('cardDate'), $('moonExplorer'), $('darknessCard'), $('neighborsCard'), $('meteorCard'), $('worldMoonCard'), $('tidesCard'), section('launches')],
     calendar: [section('festivals'), section('calTitle'), section('viewingWeekTitle'), section('upcoming'), section('events')],
   };
   const names = { tonight: text('今晚', 'Tonight'), plan: text('拍月', 'Plan'), explore: text('探索', 'Explore'), calendar: text('月曆', 'Calendar') };
@@ -25,26 +25,19 @@ export function initializeMobileLayout() {
     return details;
   };
 
-  // Share one date/location control across views; keep the existing input IDs.
+  // Keep time travel in Plan; retain the original input IDs and listeners.
   const timeCard = section('dt');
-  const controls = disclosure(text('日期與位置', 'Date and location'), [timeCard], 'shared-controls');
+  const controls = disclosure(text('時光旅行', 'Time travel'), [timeCard], 'shared-controls');
   controls.id = 'sharedControls';
   controls.querySelector('summary').id = 'mobileContext';
-  const locationRow = document.createElement('div');
-  locationRow.className = 'shared-location row';
-  const locationName = document.createElement('span');
-  locationName.id = 'sharedLocationName';
-  locationName.className = 'when';
-  locationRow.append(locationName, $('locBtn'));
-  controls.append(locationRow);
-  document.querySelector('.hero').before(controls);
+  groups.plan.unshift(controls);
 
   // Keep illumination visible and disclose secondary Moon statistics.
   const stats = document.querySelector('.hero .stats');
   const extra = document.createElement('div');
   extra.className = 'stats';
   [...stats.children].slice(2).forEach(node => extra.append(node));
-  const moonDetails = disclosure(text('月亮詳細資訊與詩句', 'Moon details and poem'), [extra, $('poem')]);
+  const moonDetails = disclosure(text('月亮詳細資訊', 'Moon details'), [extra]);
   stats.after(moonDetails);
 
   // Present viewing conditions and windows as one recommendation card.
@@ -135,7 +128,6 @@ export function initializeMobileLayout() {
       const dateLabel = date.toLocaleString(locale, { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
       const label = `${live ? text('即時', 'Live') : text('所選時間', 'Selected')} · ${dateLabel} · ${tr(locationName)}`;
       if ($('mobileContext').textContent !== label) $('mobileContext').textContent = label;
-      $('sharedLocationName').textContent = tr(locationName);
     },
   };
 }

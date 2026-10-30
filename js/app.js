@@ -11,6 +11,8 @@ import { moonPath, moonPathSVG, moonPathMarker } from "./moon-path.js";
 
 import { viewingWeek, scoreViewingWeek } from "./viewing-week.js";
 
+import { initObservingFeatures } from "./observing-features.js";
+import { initNightFeatures } from "./night-features.js";
 import { initializeMobileLayout } from "./mobile-layout.js";
 import { initExplorationTools } from "./exploration-tools.js";
 import { photoGuide, photoAdvice } from "./photo-guide.js";
@@ -153,6 +155,8 @@ function render(force = false) {
 
   mobileLayout?.update(d, state.loc.name, state.live && !state.offsetH);
   explorationTools?.update();
+  nightFeatures?.update();
+  observingFeatures?.update();
   renderPhotoGuide(d, ms);
   renderWhere(d);
   renderViewing(d);
@@ -708,6 +712,8 @@ if (A.phaseIndex(firstState.elong) === 4 && !sessionStorage.getItem("moon.rabbit
 
 // ---------- start ----------
 let mobileLayout = null;
+let nightFeatures = null;
+let observingFeatures = null;
 let explorationTools = null;
 explorationTools = initExplorationTools({
   date: target,
@@ -720,6 +726,28 @@ explorationTools = initExplorationTools({
     jumpTo(date);
     mobileLayout?.reveal("moonStage");
     $("moonStage").scrollIntoView({ behavior: "smooth", block: "center" });
+  },
+});
+nightFeatures = initNightFeatures({
+  date: target,
+  location: () => state.loc,
+  jump: (date, card) => {
+    jumpTo(date);
+    mobileLayout?.reveal(card);
+    $(card).scrollIntoView({ behavior: "smooth", block: "start" });
+  },
+});
+observingFeatures = initObservingFeatures({
+  date: target,
+  location: () => state.loc,
+  jump: (date, card) => {
+    jumpTo(date);
+    mobileLayout?.reveal(card);
+    $(card).scrollIntoView({ behavior: "smooth", block: "start" });
+  },
+  reveal: (card) => {
+    mobileLayout?.reveal(card);
+    $(card).scrollIntoView({ behavior: "smooth", block: "start" });
   },
 });
 mobileLayout = initializeMobileLayout();

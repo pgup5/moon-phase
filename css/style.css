@@ -215,3 +215,38 @@ html[lang=en] .cal .tag { font-size:.6rem; overflow-wrap:anywhere; }
 @media (prefers-reduced-motion:reduce) {
   *, *::before, *::after { scroll-behavior:auto !important; transition:none !important; }
 }
+
+.darkness-timeline { display:flex; height:24px; overflow:hidden; border:1px solid var(--line); border-radius:10px; margin:14px 0 10px; }
+.darkness-timeline > span { flex-basis:0; min-width:0; }
+.sky-day { background:#8eb6dc; }
+.sky-civil { background:#c88b72; }
+.sky-nautical { background:#6c6b9e; }
+.sky-astronomical { background:#38466d; }
+.sky-moonlit { background:#797b8e; }
+.sky-moonless { background:#070a17; }
+.darkness-legend { display:flex; flex-wrap:wrap; gap:8px 14px; font-size:.75rem; color:var(--muted); }
+.darkness-legend span { display:inline-flex; align-items:center; gap:5px; }
+.darkness-legend i { display:inline-block; width:11px; height:11px; border:1px solid var(--line); border-radius:3px; }
+.night-status { color:var(--accent); }
+#darknessCard h3 { font-size:1rem; font-weight:500; }
+#darknessWindows .item, #earthshineWindows .item { flex-wrap:wrap; align-items:center; }
+#neighborsList .item > span { min-width:0; }
+#neighborsList .item > span:last-child { flex-shrink:0; text-align:right; }
+
+.world-moon-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(155px,1fr)); gap:12px; margin-top:16px; }
+.world-moon-place { min-width:0; padding:14px; border:1px solid var(--line); border-radius:14px; background:#10162e80; text-align:center; }
+.world-moon-place h3 { margin:0 0 6px; font-size:1.05rem; font-weight:500; color:var(--accent); }
+.world-moon-place p { margin:8px 0; font-size:.85rem; }
+.world-moon-place svg { display:block; width:100%; max-width:140px; margin:12px auto; }
+.world-moon-place small { color:var(--muted); overflow-wrap:anywhere; }
+.world-moon-place.below-horizon svg { opacity:.55; }
+.meteor-chart, .tide-diagram { display:block; width:100%; max-width:520px; margin:16px auto; color:var(--muted); }
+#meteorWindows .item { align-items:center; flex-wrap:wrap; }
+#meteorWindows .badge { margin-bottom:6px; }
+#challengeTask { font-size:1.1rem; color:var(--accent); font-weight:500; }
+.challenge-done { display:flex; align-items:center; gap:10px; margin-top:18px; cursor:pointer; }
+.challenge-done input { flex:0 0 auto; width:22px; height:22px; min-height:22px !important; accent-color:var(--accent); }
+#worldMoonOffset { flex:1 1 180px; }
+#worldMoonOffsetLabel { min-width:3em; color:var(--accent); }
+#meteorShower { min-width:0; }
+@media(max-width:400px) { .world-moon-grid { grid-template-columns:1fr 1fr; gap:8px; } .world-moon-place { padding:10px 6px; } }
