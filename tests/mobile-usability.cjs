@@ -42,7 +42,7 @@ function jsonResponse(requestId,value){return send('Fetch.fulfillRequest',{reque
   assert.equal(await evaluate(`document.querySelector('#poem').nextElementSibling.id`),'tonightAdvice');
   assert.ok((await evaluate(`document.querySelector('#tonightAdvice').textContent`)).length>20);
   assert.equal(await evaluate(`document.querySelector('#globalNowBtn').hidden`),false);
-  assert.ok((await evaluate(`document.querySelector('#queryStatusText').textContent`)).includes('2026'));
+  assert.equal(await evaluate(`document.querySelector('#queryStatusText')`),null);
   assert.equal(launchRequests,launchesBefore,'launches fetched on initial Tonight view');
   assert.equal(await evaluate(`document.querySelector('#meteorChart').childElementCount`),0,'hidden meteor calculations were not deferred');
   assert.equal(await evaluate(`document.querySelector('#eclipseStatus').textContent`),'','hidden eclipse calculations were not deferred');
@@ -69,7 +69,7 @@ function jsonResponse(requestId,value){return send('Fetch.fulfillRequest',{reque
   assert.ok(await evaluate(`document.querySelector('#viewingWeekSummary').textContent.length>10`));
   await evaluate(`document.querySelector('#eclipseMore').open=true;document.querySelector('#viewingWeekMore').open=true;document.querySelector('[data-week-time]').click()`);
   await until(`document.querySelector('#view-tonight').classList.contains('is-active')`,'week jump');
-  assert.ok((await evaluate(`document.querySelector('#queryStatusText').textContent`)).includes(lang==='en'?'Viewing':'正在查看'));
+  assert.equal(await evaluate(`document.querySelector('#queryStatusText')`),null);
   await evaluate(`document.querySelector('#globalNowBtn').click()`);
   await until(`document.querySelector('#globalNowBtn').hidden`,'return to live');
   await until(`document.querySelector('#tonightAdvice').textContent.includes('${lang==='en'?'forecast':'天氣預報'}')`,'weather-aware advice');

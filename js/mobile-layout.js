@@ -28,15 +28,12 @@ export function initializeMobileLayout() {
   const status = document.createElement('div');
   status.id = 'queryStatus';
   status.className = 'query-status';
-  const statusText = document.createElement('span');
-  statusText.id = 'queryStatusText';
-  statusText.setAttribute('role', 'status');
   const reset = document.createElement('button');
   reset.type = 'button';
   reset.id = 'globalNowBtn';
   reset.textContent = text('回到現在', 'Back to now');
   reset.onclick = () => $('nowBtn').click();
-  status.append(statusText, reset);
+  status.append(reset);
   document.querySelector('.hero').before(status);
 
   // Keep time travel in Plan; retain the original input IDs and listeners.
@@ -192,10 +189,8 @@ export function initializeMobileLayout() {
       const dateLabel = date.toLocaleString(locale, { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
       const label = `${live ? text('即時', 'Live') : text('所選時間', 'Selected')} · ${dateLabel} · ${tr(locationName)}`;
       if ($('mobileContext').textContent !== label) $('mobileContext').textContent = label;
-      const fullDate = date.toLocaleString(locale, { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
-      const statusLabel = `${live ? text('即時', 'Live') : text('正在查看', 'Viewing')}: ${fullDate} · ${tr(locationName)}`;
-      if (statusText.textContent !== statusLabel) statusText.textContent = statusLabel;
       reset.hidden = live;
+      status.hidden = live;
       status.classList.toggle('is-selected', !live);
     },
   };
