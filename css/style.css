@@ -147,3 +147,72 @@ html[lang=en] .cal .tag { font-size:.6rem; overflow-wrap:anywhere; }
 .lunar-detail { line-height:1.75; }
 .lunar-detail h3 { margin:12px 0 4px; color:var(--accent); }
 @media(max-width:640px) { .explorer-layout { grid-template-columns:1fr; } }
+
+/* Progressive enhancement: the original document remains usable without tabs. */
+.mobile-nav, .mobile-more, .mobile-view-title { display:none; }
+.mobile-disclosure { margin:12px 0; }
+.mobile-disclosure > summary { cursor:pointer; color:var(--muted); font-size:.85rem; padding:10px 0; }
+.shared-controls { border:1px solid var(--line); border-radius:14px; padding:0 14px; background:var(--card); }
+.shared-controls > summary { color:var(--fg); overflow-wrap:anywhere; }
+.shared-controls .card { border:0; background:none; backdrop-filter:none; padding:8px 0; margin:0; }
+.shared-location { padding:0 0 14px; justify-content:space-between; }
+.combined-viewing-score { margin:12px 0 16px; padding-bottom:12px; border-bottom:1px solid var(--line); }
+.combined-viewing-score h2 { color:var(--muted); font-size:.9rem; margin-bottom:4px; }
+.compass-details > summary { text-align:center; }
+.view-panel, .hero > div, .where > div { min-width:0; }
+@media (min-width:761px) {
+  .mobile-disclosure:not(.shared-controls) > summary { display:none; }
+  .mobile-disclosure.compass-details { margin:0; }
+}
+@media (max-width:760px) {
+  html.mobile-layout-ready { scroll-padding-bottom:100px; }
+  .mobile-layout-ready main { padding:12px 14px calc(94px + env(safe-area-inset-bottom)); }
+  .mobile-layout-ready .view-panel:not(.is-active) { display:none; }
+  .mobile-layout-ready .mobile-view-title { display:block; font-size:1.25rem; font-weight:500; color:var(--accent); margin:22px 2px 8px; }
+  .mobile-layout-ready #view-tonight > .mobile-view-title { display:none; }
+  .mobile-more { display:block; margin-right:auto; min-height:44px; }
+  .mobile-nav { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); position:fixed; z-index:20; bottom:0; left:0; right:0; padding:6px max(8px,env(safe-area-inset-left)) calc(6px + env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-right)); background:rgba(10,14,34,.96); backdrop-filter:blur(18px); border-top:1px solid var(--line); box-shadow:0 -8px 28px #0004; }
+  .mobile-nav button { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; min-height:54px; padding:4px; border:0; border-radius:12px; background:transparent; color:var(--muted); font-size:.75rem; }
+  .mobile-nav button[aria-current=page] { background:rgba(255,217,138,.1); color:var(--accent); }
+  .nav-icon { font-size:1.55rem; line-height:1.1; }
+  .mobile-more[aria-current=page] { border-color:var(--accent); color:var(--accent); }
+  .mobile-layout-ready h1 { font-size:1.8rem; margin:8px 0; }
+  .mobile-layout-ready #clock, .mobile-layout-ready #tzInfo { font-size:.72rem; }
+  .mobile-layout-ready .language-switch { font-size:.75rem; flex-wrap:wrap; }
+  .mobile-layout-ready .hero { grid-template-columns:132px minmax(0,1fr); gap:12px; margin:16px 0; text-align:left; align-items:start; }
+  .mobile-layout-ready .moon-stage { width:132px; }
+  .mobile-layout-ready .moon-stage .glow { box-shadow:0 0 36px 8px rgba(255,236,190,var(--glow,.2)); }
+  .mobile-layout-ready .hero .phase { font-size:1.8rem; }
+  .mobile-layout-ready .phase small { display:block; font-size:.8rem; margin:4px 0; }
+  .mobile-layout-ready .hero .when { font-size:.75rem; }
+  .mobile-layout-ready .hero .stats { font-size:.8rem; gap:4px 8px; margin:0; }
+  .mobile-layout-ready .hero .bar { margin:8px 0; }
+  .mobile-layout-ready .hero .badges { justify-content:flex-start; }
+  .mobile-layout-ready .hero .hint { font-size:.65rem; margin:6px 0; }
+  .mobile-layout-ready .hero .mobile-disclosure { margin:2px 0; }
+  .mobile-layout-ready .hero .mobile-disclosure summary { font-size:.75rem; }
+  .mobile-layout-ready .poem { margin:8px 0; padding:8px; font-size:.9rem; }
+  .mobile-layout-ready .card { padding:14px; margin-top:12px; }
+  .mobile-layout-ready .shared-controls .card { padding:6px 0; margin:0; }
+  .mobile-layout-ready .card h2 { font-size:1rem; }
+  .mobile-layout-ready .where { display:flex; flex-direction:column-reverse; align-items:stretch; gap:6px; }
+  .mobile-layout-ready .where .stats { max-width:none; margin:8px 0 0; }
+  .mobile-layout-ready .compass { display:block; margin:auto; }
+  .mobile-layout-ready #locName { font-size:.75rem; overflow-wrap:anywhere; }
+  .mobile-layout-ready .when { overflow-wrap:anywhere; }
+  .mobile-layout-ready input, .mobile-layout-ready select, .mobile-layout-ready button { min-height:44px; max-width:100%; }
+  .mobile-layout-ready input[type=range] { min-height:32px; }
+  .mobile-layout-ready #dt { min-width:0; width:100%; }
+  .mobile-layout-ready .shared-controls .row > label { font-size:.85rem; }
+  .mobile-layout-ready .cal { gap:3px; }
+  .mobile-layout-ready .cal .day { min-width:0; overflow-wrap:anywhere; }
+  .mobile-layout-ready .viewing-week button { min-width:44px; }
+  .mobile-layout-ready .planner-inputs label { flex-basis:125px; min-width:0; }
+  .mobile-layout-ready #cardTitle { flex:1 1 150px; min-width:0; }
+  .mobile-layout-ready .toast { bottom:calc(86px + env(safe-area-inset-bottom)); max-width:calc(100vw - 28px); width:max-content; }
+  .mobile-layout-ready footer { font-size:.7rem; }
+  .mobile-layout-ready :focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  *, *::before, *::after { scroll-behavior:auto !important; transition:none !important; }
+}

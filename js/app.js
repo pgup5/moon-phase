@@ -11,6 +11,7 @@ import { moonPath, moonPathSVG, moonPathMarker } from "./moon-path.js";
 
 import { viewingWeek, scoreViewingWeek } from "./viewing-week.js";
 
+import { initializeMobileLayout } from "./mobile-layout.js";
 import { initExplorationTools } from "./exploration-tools.js";
 import { photoGuide, photoAdvice } from "./photo-guide.js";
 
@@ -150,6 +151,7 @@ function render(force = false) {
     if (fest && fest.name === "中秋節") setTimeout(hopRabbit, 800);
   }
 
+  mobileLayout?.update(d, state.loc.name, state.live && !state.offsetH);
   explorationTools?.update();
   renderPhotoGuide(d, ms);
   renderWhere(d);
@@ -326,6 +328,7 @@ $("viewingWeekRows").addEventListener("click", (event) => {
   const button = event.target.closest("[data-week-time]");
   if (!button) return;
   jumpTo(new Date(+button.dataset.weekTime));
+  mobileLayout?.reveal("viewingContext");
   $("viewingContext").closest("section").scrollIntoView({ behavior: "smooth", block: "start" });
 });
 
@@ -418,6 +421,7 @@ for (const id of ["events", "festivals"]) {
     if (!it) return;
     const t = new Date(+it.dataset.t);
     jumpTo(id === "festivals" && t.getHours() === 12 ? new Date(t.getFullYear(), t.getMonth(), t.getDate(), 20) : t);
+    mobileLayout?.reveal("moonStage");
     scrollTo({ top: 0, behavior: "smooth" });
   });
 }
@@ -527,6 +531,7 @@ $("cal").addEventListener("click", (e) => {
   const d = target();
   const y = state.calYear ?? d.getFullYear(), m = state.calMonth ?? d.getMonth();
   jumpTo(new Date(y, m, +c.dataset.d, 21));
+  mobileLayout?.reveal("moonStage");
 });
 function shiftMonth(n) {
   const d = target();
@@ -702,6 +707,7 @@ if (A.phaseIndex(firstState.elong) === 4 && !sessionStorage.getItem("moon.rabbit
 }
 
 // ---------- start ----------
+let mobileLayout = null;
 let explorationTools = null;
 explorationTools = initExplorationTools({
   date: target,
@@ -712,9 +718,11 @@ explorationTools = initExplorationTools({
     localStorage.setItem("moon.loc", JSON.stringify(state.loc));
     memo.clear();
     jumpTo(date);
+    mobileLayout?.reveal("moonStage");
     $("moonStage").scrollIntoView({ behavior: "smooth", block: "center" });
   },
 });
+mobileLayout = initializeMobileLayout();
 state.southern = new URLSearchParams(location.search).get("hemi") === "S";
 $("hemi").value = state.southern ? "S" : "N";
 updateOffsetLabel();
