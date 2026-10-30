@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>老詹的月亮</title>
+<title>明月幾時有</title>
 <meta name="description" content="依您的時間與位置，即時顯示真實的 3D 月相、月出月落、節氣節日與天象。">
 <meta name="theme-color" content="#0a0d24">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<meta property="og:title" content="老詹的月亮">
+<meta property="og:title" content="明月幾時有">
 <meta property="og:description" content="真實 3D 月亮、月出月落、節氣節日、生日月亮卡片">
 <meta property="og:image" content="icons/icon-512.png">
 <link rel="stylesheet" href="css/style.css">
@@ -20,7 +20,7 @@
   <div class="language-switch"><label for="languageSelect">語言 / Language</label>
     <select id="languageSelect" aria-label="語言 / Language"><option value="zh-Hant">繁體中文</option><option value="en">English</option></select>
   </div>
-  <h1>老詹的月亮</h1>
+  <h1>明月幾時有</h1>
   <div class="sub" id="clock"></div>
   <div class="center"><span class="chip" id="tzInfo"></span></div>
   <div class="banner" id="banner" hidden></div>
@@ -35,6 +35,7 @@
       <div class="when" id="forWhen"></div>
       <div class="when" id="lunarLine"></div>
       <blockquote class="poem" id="poem"></blockquote>
+      <p id="tonightAdvice" class="tonight-advice" role="status" aria-live="polite"></p>
       <div class="badges" id="badges"></div>
       <div class="bar"><div id="illumBar"></div></div>
       <div class="stats">
@@ -87,6 +88,8 @@
     <h2 id="viewingWeekTitle">未來七晚賞月比較</h2>
     <p class="when" id="viewingWeekContext"></p>
     <p class="when" id="viewingWeekStatus" role="status" aria-live="polite"></p>
+    <p id="viewingWeekSummary" class="feature-summary"></p>
+    <details id="viewingWeekMore" class="feature-more"><summary>展開七晚完整比較</summary>
     <div class="viewing-week-scroll" role="region" aria-label="七晚賞月比較表，可左右捲動" tabindex="0">
       <table class="viewing-week">
         <caption class="sr-only">七晚月相、賞月時段、天氣與評分比較</caption>
@@ -94,6 +97,7 @@
         <tbody id="viewingWeekRows"></tbody>
       </table>
     </div>
+    </details>
     <p class="src">從所選日期起連續七晚，每晚以當日中午至隔日中午計算。天氣為建議觀賞時間的逐時預報；各晚皆有完整預報才以含天氣評分比較，否則全部使用天文評分。最高分夜晚會標示，同分並列；點選日期可查看當晚詳情。評分方法與天氣來源同上。</p>
   </section>
 
@@ -185,8 +189,11 @@
 
   <section class="card">
     <h2>🚀 全球近期火箭發射<span class="spacer"></span><small class="muted" id="launchTz"></small></h2>
+    <p id="launchSummary" class="feature-summary">展開探索時更新近期發射資訊。</p>
+    <details id="launchMore" class="feature-more"><summary>篩選與完整發射清單</summary>
     <div class="filters" id="launchFilter" role="group" aria-label="依國家或機構篩選"></div>
     <div class="list" id="launches"><div class="when">載入中…</div></div>
+    </details>
     <p class="src" id="launchSrc">發射時間資料來源：<a href="https://thespacedevs.com/llapi" target="_blank" rel="noopener">The Space Devs · Launch Library 2</a></p>
   </section>
 
@@ -219,7 +226,8 @@
   </section>
 
   <footer>依 Jean Meeus《天文演算法》於瀏覽器內計算 · 月球影像：NASA LRO / SVS CGI Moon Kit<br>
-    所有時間以您的當地時區顯示（<span id="tz"></span>）· <a href="https://github.com/pgup5/moon-phase">原始碼</a></footer>
+    所有時間以您的當地時區顯示（<span id="tz"></span>）· <a href="https://github.com/pgup5/moon-phase">原始碼</a><br>
+    作者：老詹  2026/10/30</footer>
 </main>
 <div class="toast" id="toast"></div>
 <script type="module" src="js/app.js"></script>

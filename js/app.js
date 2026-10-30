@@ -2,9 +2,9 @@ import { tr, locale, initializeLanguage } from "./i18n.js";
 import * as A from "./astro.js";
 import * as C from "./culture.js";
 import { initSky } from "./sky.js";
-import { createMoon, renderMoonImage } from "./moon3d.js";
 import { buildCard, shareOrDownload } from "./card.js";
 import { getLaunches, CATEGORIES } from "./launches.js";
+import { viewingAdvice } from "./viewing-advice.js";
 import { getViewingWeather, viewingScore } from "./viewing-score.js";
 
 import { moonPath, moonPathSVG, moonPathMarker } from "./moon-path.js";
@@ -94,11 +94,16 @@ const stage = $("moonStage");
 const fallback = document.createElement("div");
 fallback.className = "moon-fallback";
 stage.appendChild(fallback);
-createMoon(stage).then((m) => {
-  moon3d = m;
-  if (m) fallback.remove(); else $("moonHint").hidden = true;
-  render(true);
-}).catch((e) => { console.warn("3D moon unavailable", e); $("moonHint").hidden = true; render(true); });
+let moonModulePromise;
+const loadMoonModule = () => moonModulePromise ||= import("./moon3d.js");
+function startMoon3D() {
+  if (navigator.connection?.saveData) { $("moonHint").hidden = true; return; }
+  loadMoonModule().then(module => module.createMoon(stage)).then(m => {
+    moon3d = m;
+    if (m) fallback.remove(); else $("moonHint").hidden = true;
+    render(true);
+  }).catch(e => { console.warn("3D moon unavailable", e); $("moonHint").hidden = true; });
+}
 
 // ---------- sky ----------
 const sky = initSky($("sky"));
@@ -155,15 +160,17 @@ function render(force = false) {
   }
 
   mobileLayout?.update(d, state.loc.name, state.live && !state.offsetH);
-  explorationTools?.update();
-  nightFeatures?.update();
+  if (visibleFeature("landscapePlanner") || visibleFeature("moonExplorer")) explorationTools?.update();
+  if (visibleFeature("darknessCard") || visibleFeature("neighborsCard")) nightFeatures?.update();
   observingFeatures?.update();
-  eclipseFeature?.update();
-  renderPhotoGuide(d, ms);
+  if (visibleFeature("lunarEclipseCard")) eclipseFeature?.update();
+  if (visibleFeature("photoTitle")) renderPhotoGuide(d, ms);
   renderWhere(d);
   renderViewing(d);
-  renderMoonPath(d);
-  renderViewingWeek(d);
+  renderViewingAdvice(d);
+  if (visibleFeature("moonPathTitle")) renderMoonPath(d);
+  if (visibleFeature("viewingWeekTitle")) renderViewingWeek(d);
+  if (visibleFeature("launches") && !launchesRequested) loadLaunches();
 
   if (force || dk !== lastDay) {
     lastDay = dk;
@@ -171,7 +178,7 @@ function render(force = false) {
     renderLists(d);
   }
   const mk = `${state.calYear ?? d.getFullYear()}-${state.calMonth ?? d.getMonth()}-${dk}-${state.southern}`;
-  if (force || mk !== lastMonthKey) { lastMonthKey = mk; renderCalendar(d); }
+  if (visibleFeature("calTitle") && (force || mk !== lastMonthKey)) { lastMonthKey = mk; renderCalendar(d); }
 }
 
 let raf = 0;
@@ -238,7 +245,7 @@ $("moonPathSlider").addEventListener("input", () => {
 $("moonPathReset").onclick = () => { pathPreview = false; renderMoonPath(target()); };
 
 // ---------- best moon-viewing windows ----------
-let lastViewingKey = "";
+let lastViewingKey = "", adviceKey = "", adviceData = null;
 function renderViewing(d) {
   const { lat, lon } = state.loc;
   const name = tr(state.loc.name);
@@ -246,6 +253,8 @@ function renderViewing(d) {
   if (key === lastViewingKey) return;
   lastViewingKey = key;
   const windows = cached(key, () => A.viewingWindows(d, lat, lon));
+  adviceData = { windows, lat, lon, weather: null };
+  adviceKey = "";
   $("viewingContext").textContent = tr`${fmtDate(d)}夜間 · ${name} · ${TZ}`;
   const time = (t) => `${dayKey(t) !== dayKey(d) ? tr("翌日 ") : ""}${fmtTime(t)}`;
   $("viewingWindows").innerHTML = windows.length ? windows.map((w) =>
@@ -254,11 +263,34 @@ function renderViewing(d) {
   renderViewingScore(d, windows, lat, lon, key);
 }
 
+function renderViewingAdvice(d) {
+  if (!adviceData) return;
+  const key = `${lastViewingKey}:${Math.floor(+d / 60000)}`;
+  if (key === adviceKey) return;
+  adviceKey = key;
+  const english = locale === "en-US", t = (zh, en) => english ? en : zh;
+  const advice = viewingAdvice(d, adviceData.windows, adviceData.lat, adviceData.lon, adviceData.weather);
+  const prefix = dayKey(d) === dayKey(new Date()) ? t("今晚", "Tonight") : t("所選夜晚", "The selected night");
+  if (advice.kind !== "window") {
+    $("tonightAdvice").textContent = advice.kind === "ended"
+      ? t("所選夜晚的賞月時段已結束，可切換日期尋找下一晚。", "The selected night's viewing windows have ended; try the next date.")
+      : t("這晚沒有符合賞月條件的時段，可到「觀測」查看無月光的觀星時段。", "No viewing windows meet the lunar criteria; check moon-free stargazing times in Observe.");
+    return;
+  }
+  const r = advice.result, p = A.moonPosition(r.date, adviceData.lat, adviceData.lon);
+  const quality = r.score >= 60 ? t("適合賞月", "looks suitable for Moon viewing") : r.score >= 40 ? t("賞月條件普通", "has mixed Moon-viewing conditions") : t("賞月條件較差", "has poor Moon-viewing conditions");
+  const basis = r.forecast ? t("依天文與天氣預報", "Based on astronomy and forecast") : t("僅依天文條件，未納入天氣", "Astronomy only; weather not included");
+  $("tonightAdvice").textContent = english
+    ? `${prefix} ${quality}: try ${fmtShort(r.date)}, facing ${dirName(p.az)} (${p.az.toFixed(0)}°), altitude ${p.alt.toFixed(0)}°. ${basis}.`
+    : `${prefix}${quality}，建議 ${fmtShort(r.date)} 朝${dirName(p.az)}方（${p.az.toFixed(0)}°）、仰角約 ${p.alt.toFixed(0)}° 觀賞（${basis}）。`;
+}
+
 async function renderViewingScore(d, windows, lat, lon, key) {
   const tonight = dayKey(d) === dayKey(new Date());
   $("viewingScoreTitle").textContent = tonight ? tr("今晚賞月評分") : tr("所選夜晚賞月評分");
   const show = (result, note) => {
     if (key !== lastViewingKey) return;
+    renderViewingAdvice(target());
     $("viewingScoreValue").textContent = result ? `${result.score} / 100` : "—";
     $("viewingScoreLabel").textContent = !result ? tr("沒有符合條件的時段")
       : result.score >= 80 ? tr("很適合賞月") : result.score >= 60 ? tr("適合賞月")
@@ -278,6 +310,7 @@ async function renderViewingScore(d, windows, lat, lon, key) {
   show(astronomy, tr("正在取得天氣預報，目前顯示天文評分…"));
   try {
     const weather = await getViewingWeather(lat, lon);
+    if (key === lastViewingKey) { adviceData.weather = weather; adviceKey = ""; }
     const result = viewingScore(windows, lat, lon, weather);
     show(result, result.forecast ? tr("已納入賞月時段的逐時天氣預報。") : tr("僅天文評分：預報資料未完整涵蓋賞月時段。"));
   } catch {
@@ -299,6 +332,10 @@ async function renderViewingWeek(d) {
   const show = (comparison, message) => {
     if (key !== lastWeekKey) return;
     $("viewingWeekStatus").textContent = message;
+    const best = comparison.rows.filter(n => n.best && n.result);
+    $("viewingWeekSummary").textContent = best.length
+      ? (locale === "en-US" ? "Highest score: " : "最高分夜晚：") + best.map(n => `${fmtDate(n.night)} · ${n.result.score}/100`).join("；")
+      : (locale === "en-US" ? "No qualifying viewing windows this week." : "這七晚沒有符合條件的賞月時段。");
     $("viewingWeekRows").innerHTML = comparison.rows.map((n) => {
       const time = (t) => `${dayKey(t) !== dayKey(n.night) ? tr("翌日 ") : ""}${fmtTime(t)}`;
       const r = n.result;
@@ -456,7 +493,7 @@ function launchCountdown(l, now) {
   const rel = h < 1 ? tr`${Math.max(1, Math.round(h * 60))} 分鐘後` : h < 48 ? tr`${Math.round(h)} 小時後` : tr`${Math.round(h / 24)} 天後`;
   return `${tr(l.status)}・${rel}`;
 }
-let launchData = null;
+let launchData = null, launchesRequested = false;
 let launchFilter = localStorage.getItem("moon.launchFilter") || "all";
 function renderLaunches() {
   if (!launchData) return;
@@ -467,6 +504,9 @@ function renderLaunches() {
   $("launchFilter").innerHTML = CATEGORIES.filter(([k]) => counts[k]).map(([k, name]) =>
     `<button data-k="${k}" aria-pressed="${k === launchFilter}">${tr(name)} <small>${counts[k]}</small></button>`).join("");
   const shown = launchFilter === "all" ? launches.slice(0, 12) : launches.filter((l) => l.tags.includes(launchFilter));
+  $("launchSummary").textContent = shown.length
+    ? `${locale === "en-US" ? "Next listed: " : "近期發射："}${shown[0].mission} · ${launchWhen(shown[0])}${stale ? (locale === "en-US" ? " (offline data)" : "（離線資料）") : ""}`
+    : tr("目前沒有已排定的發射");
   $("launches").innerHTML = shown.length ? shown.map((l) => `<div class="item launch">
       <span><b>${esc(l.mission)}</b>${l.nasa && l.provider !== "NASA" ? ' <span class="badge">NASA</span>' : ""}<br><small>${esc([l.provider, l.rocket, l.site, l.orbit].filter(Boolean).join("・"))}</small></span>
       <span style="text-align:right">${esc(launchWhen(l))}<br><small>${esc(launchCountdown(l, now))}</small></span></div>`).join("")
@@ -481,12 +521,16 @@ $("launchFilter").addEventListener("click", (e) => {
   renderLaunches();
 });
 async function loadLaunches() {
+  launchesRequested = true;
   try {
     launchData = await getLaunches();
     renderLaunches();
   } catch (e) {
     console.warn("Launch data unavailable", e);
-    if (!launchData) $("launches").innerHTML = tr('<div class="when">暫時無法取得發射資料，請稍後再試</div>');
+    if (!launchData) {
+      $("launches").innerHTML = tr('<div class="when">暫時無法取得發射資料，請稍後再試</div>');
+      $("launchSummary").textContent = locale === "en-US" ? "Launch data is temporarily unavailable." : "暫時無法取得發射資料。";
+    }
   }
 }
 $("languageSelect").addEventListener("change", () => {
@@ -499,9 +543,8 @@ $("languageSelect").addEventListener("change", () => {
   location.assign(url.href);
 });
 $("launchTz").textContent = tr`以您的時區顯示：${TZ}`;
-loadLaunches();
-setInterval(renderLaunches, 60000);
-setInterval(loadLaunches, 15 * 60000);
+setInterval(() => { if (!document.hidden && visibleFeature("launches")) renderLaunches(); }, 60000);
+setInterval(() => { if (!document.hidden && visibleFeature("launches")) loadLaunches(); }, 15 * 60000);
 
 // ---------- calendar ----------
 function renderCalendar(d) {
@@ -626,7 +669,7 @@ $("cardBtn").onclick = async () => {
     const ms = A.moonState(d), idx = A.phaseIndex(ms.elong);
     const title = $("cardTitle").value.trim();
     const special = eventsNear(d).map((e) => tr(e.kind)).join("・");
-    const moonImage = await renderMoonImage(ms.elong, state.southern, 900).catch(() => null);
+    const moonImage = await loadMoonModule().then(module => module.renderMoonImage(ms.elong, state.southern, 900)).catch(() => null);
     lastCard = await buildCard({
       moonImage, svgFallback: moonImage ? null : moonSVG(ms.elong, 600, state.southern),
       dateText: `${title ? title + "｜" : ""}${d.toLocaleDateString(LOC, { year: "numeric", month: "long", day: "numeric" })}`,
@@ -712,6 +755,8 @@ if (A.phaseIndex(firstState.elong) === 4 && !sessionStorage.getItem("moon.rabbit
   setTimeout(hopRabbit, 2500);
 }
 
+function visibleFeature(id) { return !mobileLayout || mobileLayout.isVisible(id); }
+
 // ---------- start ----------
 let mobileLayout = null;
 let nightFeatures = null;
@@ -741,6 +786,7 @@ nightFeatures = initNightFeatures({
   },
 });
 observingFeatures = initObservingFeatures({
+  visible: visibleFeature,
   date: target,
   location: () => state.loc,
   jump: (date, card) => {
@@ -769,5 +815,9 @@ updateOffsetLabel();
 const qt = new URLSearchParams(location.search).get("t");
 if (qt && !isNaN(new Date(qt))) jumpTo(new Date(qt));
 render(true);
-setInterval(() => { if (!state.playing) render(); }, 1000);
+if ("requestIdleCallback" in window) requestIdleCallback(startMoon3D, { timeout: 1500 });
+else setTimeout(startMoon3D, 0);
+window.addEventListener("moon:viewchange", () => scheduleRender(false));
+document.addEventListener("visibilitychange", () => { if (!document.hidden) scheduleRender(true); });
+setInterval(() => { if (!state.playing && !document.hidden) render(); }, 30000);
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") stopPlay(); });

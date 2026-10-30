@@ -1,5 +1,8 @@
 // English messages keyed by the original Traditional Chinese text.
 export default {
+  "展開七晚完整比較": "Compare all seven nights",
+  "篩選與完整發射清單": "Filters and full launch list",
+  "展開探索時更新近期發射資訊。": "Recent launches update when you open Explore.",
   "月亮拍攝助手": "Moon photography assistant",
   "拍攝設備": "Equipment",
   "手機": "Phone",

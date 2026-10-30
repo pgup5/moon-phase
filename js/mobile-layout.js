@@ -25,6 +25,20 @@ export function initializeMobileLayout() {
     return details;
   };
 
+  const status = document.createElement('div');
+  status.id = 'queryStatus';
+  status.className = 'query-status';
+  const statusText = document.createElement('span');
+  statusText.id = 'queryStatusText';
+  statusText.setAttribute('role', 'status');
+  const reset = document.createElement('button');
+  reset.type = 'button';
+  reset.id = 'globalNowBtn';
+  reset.textContent = text('回到現在', 'Back to now');
+  reset.onclick = () => $('nowBtn').click();
+  status.append(statusText, reset);
+  document.querySelector('.hero').before(status);
+
   // Keep time travel in Plan; retain the original input IDs and listeners.
   const timeCard = section('dt');
   const controls = disclosure(text('時光旅行', 'Time travel'), [timeCard], 'shared-controls');
@@ -73,6 +87,38 @@ export function initializeMobileLayout() {
     panels[key] = panel;
     main.querySelector('footer').before(panel);
   }
+  const shortcuts = document.createElement('nav');
+  shortcuts.className = 'explore-shortcuts';
+  shortcuts.setAttribute('aria-label', text('探索快速入口', 'Explore shortcuts'));
+  const destinations = [
+    [section('cardDate'), 'birthdaySection', text('生日卡片', 'Birthday')],
+    [$('moonExplorer'), 'moonExplorer', text('月面', 'Lunar map')],
+    [$('neighborsCard'), 'neighborsCard', text('星空', 'Nearby sky')],
+    [$('meteorCard'), 'meteorCard', text('流星雨', 'Meteors')],
+    [$('worldMoonCard'), 'worldMoonCard', text('各地月亮', 'Around Earth')],
+    [$('tidesCard'), 'tidesCard', text('潮汐', 'Tides')],
+    [section('launches'), 'launchSection', text('火箭', 'Launches')],
+  ];
+  for (const [target, id, label] of destinations) {
+    target.id = id;
+    target.style.scrollMarginTop = 'var(--query-offset, 112px)';
+    const link = document.createElement('a');
+    link.href = `#${id}`;
+    link.textContent = label;
+    link.onclick = event => {
+      event.preventDefault();
+      const heading = target.querySelector('h2');
+      heading?.setAttribute('tabindex', '-1');
+      heading?.focus({ preventScroll: true });
+      target.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' });
+    };
+    shortcuts.append(link);
+  }
+  panels.explore.querySelector('.mobile-view-title').after(shortcuts);
+  if (globalThis.ResizeObserver) new ResizeObserver(() => {
+    document.documentElement.style.setProperty('--query-offset', `${status.offsetHeight + 16}px`);
+  }).observe(status);
+
   const nav = document.createElement('nav');
   nav.className = 'mobile-nav';
   nav.setAttribute('aria-label', text('主要導覽', 'Main navigation'));
@@ -93,7 +139,11 @@ export function initializeMobileLayout() {
   }
   document.body.append(nav);
   let active = 'tonight';
-  const hashView = () => location.hash.replace('#', '');
+  const hashView = () => {
+    const hash = location.hash.replace('#', '');
+    if (panels[hash]) return hash;
+    return $(hash)?.closest('.view-panel')?.id.replace('view-', '') || 'tonight';
+  };
   function show(key, { scroll = true, history = true } = {}) {
     if (!panels[key]) key = 'tonight';
     active = key;
@@ -106,28 +156,47 @@ export function initializeMobileLayout() {
     if (scroll && mobile.matches) window.scrollTo({ top: 0, behavior: 'instant' });
     // A hidden Moon canvas/map may need a fresh size when its panel appears.
     window.dispatchEvent(new Event('resize'));
+    window.dispatchEvent(new Event('moon:viewchange'));
   }
   nav.addEventListener('click', event => {
     const button = event.target.closest('[data-view]');
     if (button) show(button.dataset.view);
   });
-  window.addEventListener('popstate', () => show(hashView(), { history: false }));
-  window.addEventListener('hashchange', () => show(hashView(), { history: false }));
+  const restoreRoute = () => {
+    const target = $(location.hash.replace('#', ''));
+    show(hashView(), { history: false, scroll: !target });
+    if (target) target.scrollIntoView({ block: 'start' });
+  };
+  window.addEventListener('popstate', restoreRoute);
+  window.addEventListener('hashchange', restoreRoute);
   mobile.addEventListener('change', () => {
     for (const details of main.querySelectorAll('.mobile-disclosure')) details.open = !mobile.matches;
     show(active, { scroll: false, history: false });
   });
   show(hashView(), { scroll: false, history: false });
+  const initialTarget = $(location.hash.replace('#', ''));
+  if (initialTarget) requestAnimationFrame(() => initialTarget.scrollIntoView({ block: 'start' }));
   document.documentElement.classList.add('mobile-layout-ready');
   return {
+    isVisible(id) {
+      return !mobile.matches || $(id)?.closest('.view-panel')?.classList.contains('is-active');
+    },
     reveal(id) {
       const panel = $(id)?.closest('.view-panel');
       if (panel && mobile.matches) show(panel.id.replace('view-', ''));
+      for (let parent = $(id)?.parentElement; parent; parent = parent.parentElement) {
+        if (parent.tagName === 'DETAILS') parent.open = true;
+      }
     },
     update(date, locationName, live) {
       const dateLabel = date.toLocaleString(locale, { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
       const label = `${live ? text('即時', 'Live') : text('所選時間', 'Selected')} · ${dateLabel} · ${tr(locationName)}`;
       if ($('mobileContext').textContent !== label) $('mobileContext').textContent = label;
+      const fullDate = date.toLocaleString(locale, { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
+      const statusLabel = `${live ? text('即時', 'Live') : text('正在查看', 'Viewing')}: ${fullDate} · ${tr(locationName)}`;
+      if (statusText.textContent !== statusLabel) statusText.textContent = statusLabel;
+      reset.hidden = live;
+      status.classList.toggle('is-selected', !live);
     },
   };
 }

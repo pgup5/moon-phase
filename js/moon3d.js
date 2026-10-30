@@ -53,14 +53,17 @@ export async function createMoon(container) {
   if (!webglAvailable()) return null;
   const tex = await loadTextures();
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
-  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, matchMedia("(pointer: coarse)").matches ? 1.5 : 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   container.appendChild(renderer.domElement);
   const s = buildScene(tex);
 
+  let visible = true, lastFrame = 0, dirty = true;
   const resize = () => {
+    if (!container.getClientRects().length) return;
     const w = container.clientWidth || 300;
     renderer.setSize(w, w, false);
+    dirty = true;
     renderer.domElement.style.width = "100%";
     renderer.domElement.style.height = "100%";
   };
@@ -83,25 +86,30 @@ export async function createMoon(container) {
   el.addEventListener("pointerup", end);
   el.addEventListener("pointercancel", end);
 
+  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (globalThis.IntersectionObserver) new IntersectionObserver(entries => { visible = entries[0].isIntersecting; if (visible) dirty = true; }).observe(container);
   const clock = new THREE.Clock();
-  function loop() {
+  function loop(timestamp = 0) {
     requestAnimationFrame(loop);
-    if (document.hidden) return;
+    if (document.hidden || !visible || timestamp - lastFrame < 1000 / 30) return;
+    if (reduceMotion && !dragging && !dirty && Math.abs(vx) + Math.abs(vy) + Math.abs(rx) + Math.abs(ry) < 0.001) return;
+    lastFrame = timestamp;
+    dirty = false;
     const t = clock.getElapsedTime();
     if (!dragging) {
       ry = ry * 0.94 + vy; vy *= 0.9;
       rx = rx * 0.94 + vx; vx *= 0.9;
     }
     // Gentle libration-like wobble
-    s.spin.rotation.y = ry + Math.sin(t * 0.25) * 0.05;
-    s.spin.rotation.x = rx + Math.sin(t * 0.17) * 0.03;
+    s.spin.rotation.y = ry + (reduceMotion ? 0 : Math.sin(t * 0.25) * 0.05);
+    s.spin.rotation.x = rx + (reduceMotion ? 0 : Math.sin(t * 0.17) * 0.03);
     renderer.render(s.scene, s.camera);
   }
   loop();
 
   return {
     canvas: el,
-    setPhase: (elong, southern) => s.setPhase(elong, southern),
+    setPhase: (elong, southern) => { s.setPhase(elong, southern); dirty = true; },
   };
 }
 

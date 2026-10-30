@@ -56,3 +56,13 @@ The tide slider is an idealized equilibrium-tide model combining lunar and solar
 Run observing-tool checks with `node --experimental-default-type=module --test tests/observing.test.mjs`.
 
 Local lunar-eclipse visibility uses topocentric geometric Moon-center altitude >0°, with refined horizon crossings. Global event type and locally visible phases are distinguished; refraction, terrain and weather are excluded. Run `node --experimental-default-type=module --test tests/lunar-eclipse.test.mjs` for regression checks.
+
+## Mobile usability and performance
+
+- A sticky selected-date/location indicator and a global “Back to now” button are available across tabs; date editing remains in Observe.
+- Explore has seven direct section shortcuts. Meteor showers, lunar eclipses, five-city comparison, seven-night tables and launch lists show summaries before expandable details.
+- A recommendation immediately below the poem uses remaining viewing windows and the same astronomy/weather scoring basis. Past windows are excluded and missing weather is labeled.
+- Hidden mobile tabs defer their heavier calculations and launch fetching. The 3D module loads after the first render; Data Saver uses the 2D fallback. Moon/sky animations are capped at 30 fps, pause in background/hidden views, and respect reduced motion. Coarse-pointer devices cap canvas pixel ratio at 1.5. Main live updates run every 30 seconds rather than every second.
+- Browser QA uses Chrome mobile emulation, including iPhone/Android viewport sizes, touch interactions, reduced motion, offline operation and CPU throttling. Physical iOS Safari and Android devices still need a real-device check.
+
+Run the usability regression checks against a local server with `node tests/mobile-usability.cjs` (Chrome required; defaults to `http://127.0.0.1:8765/`, override with `MOON_QA_URL`). External launch/weather responses are mocked for repeatable checks. Advice logic tests: `node --experimental-default-type=module --test tests/viewing-advice.test.mjs`.

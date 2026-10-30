@@ -30,8 +30,11 @@ export function initSky(canvas) {
   let px = 0, py = 0, tx = 0, ty = 0;
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  let dirty = true, lastFrame = 0;
   function resize() {
-    const dpr = Math.min(devicePixelRatio || 1, 2);
+    if (W === innerWidth && H === innerHeight) return;
+    dirty = true;
+    const dpr = Math.min(devicePixelRatio || 1, matchMedia("(pointer: coarse)").matches ? 1.5 : 2);
     W = innerWidth; H = innerHeight;
     canvas.width = W * dpr; canvas.height = H * dpr;
     canvas.style.width = W + "px"; canvas.style.height = H + "px";
@@ -52,7 +55,12 @@ export function initSky(canvas) {
     meteors.push({ x: Math.random() * W * 0.8 + W * 0.1, y: Math.random() * H * 0.4, vx: Math.cos(a) * 9, vy: Math.sin(a) * 9, life: 1 });
   }
 
-  function frame() {
+  function frame(timestamp) {
+    requestAnimationFrame(frame);
+    if (document.hidden || timestamp - lastFrame < 1000 / 30) return;
+    if (reduce && !dirty) return;
+    lastFrame = timestamp;
+    if (reduce) { cur = { top: [...target.top], bottom: [...target.bottom], stars: target.stars }; dirty = false; }
     for (const k of ["top", "bottom"]) cur[k] = cur[k].map((v, i) => lerp(v, target[k][i], 0.05));
     cur.stars = lerp(cur.stars, target.stars, 0.05);
     px = lerp(px, tx, 0.05); py = lerp(py, ty, 0.05);
@@ -79,12 +87,11 @@ export function initSky(canvas) {
       ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(m.x - m.vx * 10, m.y - m.vy * 10); ctx.stroke();
       m.x += m.vx; m.y += m.vy; m.life -= 0.018;
     }
-    requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
 
   return {
-    setSunAltitude(alt) { target = skyColors(alt); document.documentElement.dataset.daylight = alt > 0 ? "day" : "night"; },
+    setSunAltitude(alt) { const next = skyColors(alt); if (JSON.stringify(next) !== JSON.stringify(target)) dirty = true; target = next; document.documentElement.dataset.daylight = alt > 0 ? "day" : "night"; },
     shootingStar: spawnMeteor,
   };
 }
