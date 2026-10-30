@@ -10,11 +10,11 @@ export function initializeMobileLayout() {
   const section = id => $(id).closest('section');
   const groups = {
     tonight: [document.querySelector('.hero'), section('viewingContext'), section('locName'), $('challengeCard'), section('icsBtn')],
-    plan: [section('photoTitle'), $('earthshineCard'), $('landscapePlanner'), section('moonPathTitle')],
-    explore: [section('cardDate'), $('moonExplorer'), $('darknessCard'), $('neighborsCard'), $('meteorCard'), $('worldMoonCard'), $('tidesCard'), section('launches')],
-    calendar: [section('festivals'), section('calTitle'), section('viewingWeekTitle'), section('upcoming'), section('events')],
+    plan: [section('moonPathTitle'), section('photoTitle'), $('darknessCard'), $('earthshineCard'), $('landscapePlanner')],
+    explore: [section('cardDate'), $('moonExplorer'), $('neighborsCard'), $('meteorCard'), $('worldMoonCard'), $('tidesCard'), section('launches')],
+    calendar: [section('festivals'), section('calTitle'), section('viewingWeekTitle'), $('lunarEclipseCard'), section('upcoming'), section('events')],
   };
-  const names = { tonight: text('今晚', 'Tonight'), plan: text('拍月', 'Plan'), explore: text('探索', 'Explore'), calendar: text('月曆', 'Calendar') };
+  const names = { tonight: text('今晚', 'Tonight'), plan: text('觀測', 'Observe'), explore: text('探索', 'Explore'), calendar: text('月曆', 'Calendar') };
   const disclosure = (label, nodes, className = '') => {
     const details = document.createElement('details');
     details.className = `mobile-disclosure ${className}`;

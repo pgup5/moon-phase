@@ -11,6 +11,7 @@ import { moonPath, moonPathSVG, moonPathMarker } from "./moon-path.js";
 
 import { viewingWeek, scoreViewingWeek } from "./viewing-week.js";
 
+import { initEclipseFeature } from "./eclipse-feature.js";
 import { initObservingFeatures } from "./observing-features.js";
 import { initNightFeatures } from "./night-features.js";
 import { initializeMobileLayout } from "./mobile-layout.js";
@@ -157,6 +158,7 @@ function render(force = false) {
   explorationTools?.update();
   nightFeatures?.update();
   observingFeatures?.update();
+  eclipseFeature?.update();
   renderPhotoGuide(d, ms);
   renderWhere(d);
   renderViewing(d);
@@ -714,6 +716,7 @@ if (A.phaseIndex(firstState.elong) === 4 && !sessionStorage.getItem("moon.rabbit
 let mobileLayout = null;
 let nightFeatures = null;
 let observingFeatures = null;
+let eclipseFeature = null;
 let explorationTools = null;
 explorationTools = initExplorationTools({
   date: target,
@@ -748,6 +751,15 @@ observingFeatures = initObservingFeatures({
   reveal: (card) => {
     mobileLayout?.reveal(card);
     $(card).scrollIntoView({ behavior: "smooth", block: "start" });
+  },
+});
+eclipseFeature = initEclipseFeature({
+  date: target,
+  location: () => state.loc,
+  jump: (date) => {
+    jumpTo(date);
+    mobileLayout?.reveal("moonStage");
+    $("moonStage").scrollIntoView({ behavior: "smooth", block: "center" });
   },
 });
 mobileLayout = initializeMobileLayout();

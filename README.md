@@ -5,11 +5,13 @@ A Traditional Chinese moon experience that works from the visitor's current date
 Live site: https://moon-phase-psi.vercel.app
 
 ## Features
+- Calendar: next locally visible lunar eclipse, contact times/altitudes, remaining visibility for ongoing eclipses, optional umbral-only filter and time preview (Astronomy Engine, up to 10 years, 1900–2100)
 - Tonight: a phase-aware observing challenge for unaided eyes or binoculars, with completion saved on this device
 - Explore: annual meteor-shower planning references with local radiant/moonlight windows; same-instant Moon comparison for Taipei, Tokyo, Sydney, New York and the North Pole; interactive spring/neap tide explanation
-- Explore: astronomical-night and moon-free windows with a color timeline, plus nearby planets and five bright stars for the selected time/location
-- Plan: phase-aware earthshine tips and candidate twilight windows; all three new features support English and offline use
-- Mobile bottom navigation: Tonight, Plan, Explore and Calendar; rocket launches live in Explore, reminders and installation at the bottom of Tonight; time-travel controls in Plan and expandable details keep phone views compact, while desktop shows all sections
+- Observe: astronomical-night and moon-free windows with a color timeline
+- Explore: nearby planets and five bright stars for the selected time/location
+- Observe: phase-aware earthshine tips and candidate twilight windows; all three new features support English and offline use
+- Mobile bottom navigation: Tonight, Observe, Explore and Calendar; rocket launches live in Explore, reminders and installation at the bottom of Tonight; time-travel controls in Observe and expandable details keep phone views compact, while desktop shows all sections
 - Landscape alignment planner: editable camera/landmark coordinates, optional OpenStreetMap point selection, height-aware closest approach times and time/location preview
 - Interactive lunar near-side diagram: lunar seas, craters and Apollo 11 with source links, approximate phase lighting and hemisphere orientation
 - Moon photography assistant: phone/camera guidance follows the selected phase, time and location, with exposure starting points and composition tips
@@ -52,3 +54,5 @@ The five-place Moon comparison uses Astronomy Engine at one UTC instant, with ea
 The tide slider is an idealized equilibrium-tide model combining lunar and solar second harmonics (solar contribution 0.46 relative to lunar). Its relative index is not a local tide forecast; basin geometry, distance changes, declination and lag are omitted. See [NASA tides](https://science.nasa.gov/moon/tides/) and [NOAA tides](https://www.noaa.gov/jetstream/ocean/tides).
 
 Run observing-tool checks with `node --experimental-default-type=module --test tests/observing.test.mjs`.
+
+Local lunar-eclipse visibility uses topocentric geometric Moon-center altitude >0°, with refined horizon crossings. Global event type and locally visible phases are distinguished; refraction, terrain and weather are excluded. Run `node --experimental-default-type=module --test tests/lunar-eclipse.test.mjs` for regression checks.
