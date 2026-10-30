@@ -12,7 +12,7 @@ export function initializeMobileLayout() {
     tonight: [document.querySelector('.hero'), section('viewingContext'), section('locName'), section('icsBtn')],
     plan: [section('photoTitle'), $('landscapePlanner'), section('moonPathTitle')],
     explore: [$('moonExplorer'), section('cardDate'), section('launches')],
-    calendar: [section('calTitle'), section('viewingWeekTitle'), section('upcoming'), section('events')],
+    calendar: [section('festivals'), section('calTitle'), section('viewingWeekTitle'), section('upcoming'), section('events')],
   };
   const names = { tonight: text('今晚', 'Tonight'), plan: text('拍月', 'Plan'), explore: text('探索', 'Explore'), calendar: text('月曆', 'Calendar') };
   const disclosure = (label, nodes, className = '') => {

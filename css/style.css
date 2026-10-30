@@ -177,15 +177,16 @@ html[lang=en] .cal .tag { font-size:.6rem; overflow-wrap:anywhere; }
   .mobile-layout-ready h1 { font-size:1.8rem; margin:8px 0; }
   .mobile-layout-ready #clock, .mobile-layout-ready #tzInfo { font-size:.72rem; }
   .mobile-layout-ready .language-switch { font-size:.75rem; flex-wrap:wrap; }
-  .mobile-layout-ready .hero { grid-template-columns:132px minmax(0,1fr); gap:12px; margin:16px 0; text-align:left; align-items:start; }
-  .mobile-layout-ready .moon-stage { width:132px; }
+  .mobile-layout-ready .hero { grid-template-columns:minmax(0,1fr); gap:18px; margin:16px 0; text-align:center; align-items:start; }
+  .mobile-layout-ready .hero > div { width:100%; }
+  .mobile-layout-ready .moon-stage { width:100%; margin-inline:auto; }
   .mobile-layout-ready .moon-stage .glow { box-shadow:0 0 36px 8px rgba(255,236,190,var(--glow,.2)); }
   .mobile-layout-ready .hero .phase { font-size:1.8rem; }
   .mobile-layout-ready .phase small { display:block; font-size:.8rem; margin:4px 0; }
   .mobile-layout-ready .hero .when { font-size:.75rem; }
-  .mobile-layout-ready .hero .stats { font-size:.8rem; gap:4px 8px; margin:0; }
+  .mobile-layout-ready .hero .stats { font-size:.8rem; gap:4px 8px; margin:0 auto; }
   .mobile-layout-ready .hero .bar { margin:8px 0; }
-  .mobile-layout-ready .hero .badges { justify-content:flex-start; }
+  .mobile-layout-ready .hero .badges { justify-content:center; }
   .mobile-layout-ready .hero .hint { font-size:.65rem; margin:6px 0; }
   .mobile-layout-ready .hero .mobile-disclosure { margin:2px 0; }
   .mobile-layout-ready .hero .mobile-disclosure summary { font-size:.75rem; }
