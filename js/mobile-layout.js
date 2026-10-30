@@ -9,13 +9,12 @@ export function initializeMobileLayout() {
   const main = document.querySelector('main');
   const section = id => $(id).closest('section');
   const groups = {
-    tonight: [document.querySelector('.hero'), section('viewingContext'), section('locName')],
+    tonight: [document.querySelector('.hero'), section('viewingContext'), section('locName'), section('icsBtn')],
     plan: [section('photoTitle'), $('landscapePlanner'), section('moonPathTitle')],
-    explore: [$('moonExplorer'), section('upcoming'), section('events')],
+    explore: [$('moonExplorer'), section('upcoming'), section('events'), section('launches')],
     calendar: [section('calTitle'), section('viewingWeekTitle'), section('cardDate')],
-    more: [section('launches'), section('icsBtn')],
   };
-  const names = { tonight: text('今晚', 'Tonight'), plan: text('拍月', 'Plan'), explore: text('探索', 'Explore'), calendar: text('月曆', 'Calendar'), more: text('更多', 'More') };
+  const names = { tonight: text('今晚', 'Tonight'), plan: text('拍月', 'Plan'), explore: text('探索', 'Explore'), calendar: text('月曆', 'Calendar') };
   const disclosure = (label, nodes, className = '') => {
     const details = document.createElement('details');
     details.className = `mobile-disclosure ${className}`;
@@ -81,13 +80,6 @@ export function initializeMobileLayout() {
     panels[key] = panel;
     main.querySelector('footer').before(panel);
   }
-  const moreButton = document.createElement('button');
-  moreButton.type = 'button';
-  moreButton.className = 'mobile-more';
-  moreButton.textContent = `${names.more} ⋯`;
-  moreButton.setAttribute('aria-controls', 'view-more');
-  document.querySelector('.language-switch').prepend(moreButton);
-
   const nav = document.createElement('nav');
   nav.className = 'mobile-nav';
   nav.setAttribute('aria-label', text('主要導覽', 'Main navigation'));
@@ -117,9 +109,6 @@ export function initializeMobileLayout() {
       if (button.dataset.view === key) button.setAttribute('aria-current', 'page');
       else button.removeAttribute('aria-current');
     }
-    moreButton.setAttribute('aria-expanded', String(key === 'more'));
-    if (key === 'more') moreButton.setAttribute('aria-current', 'page');
-    else moreButton.removeAttribute('aria-current');
     if (history && mobile.matches && hashView() !== key) window.history.pushState(null, '', `#${key}`);
     if (scroll && mobile.matches) window.scrollTo({ top: 0, behavior: 'instant' });
     // A hidden Moon canvas/map may need a fresh size when its panel appears.
@@ -129,7 +118,6 @@ export function initializeMobileLayout() {
     const button = event.target.closest('[data-view]');
     if (button) show(button.dataset.view);
   });
-  moreButton.onclick = () => show(active === 'more' ? 'tonight' : 'more');
   window.addEventListener('popstate', () => show(hashView(), { history: false }));
   window.addEventListener('hashchange', () => show(hashView(), { history: false }));
   mobile.addEventListener('change', () => {

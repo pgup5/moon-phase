@@ -5,7 +5,7 @@ A Traditional Chinese moon experience that works from the visitor's current date
 Live site: https://moon-phase-psi.vercel.app
 
 ## Features
-- Mobile bottom navigation: Tonight, Plan, Explore and Calendar, plus a More menu; shared date/location controls and expandable details keep phone views compact, while desktop shows all sections
+- Mobile bottom navigation: Tonight, Plan, Explore and Calendar; rocket launches live in Explore, reminders and installation at the bottom of Tonight; shared date/location controls and expandable details keep phone views compact, while desktop shows all sections
 - Landscape alignment planner: editable camera/landmark coordinates, optional OpenStreetMap point selection, height-aware closest approach times and time/location preview
 - Interactive lunar near-side diagram: lunar seas, craters and Apollo 11 with source links, approximate phase lighting and hemisphere orientation
 - Moon photography assistant: phone/camera guidance follows the selected phase, time and location, with exposure starting points and composition tips

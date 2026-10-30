@@ -149,7 +149,7 @@ html[lang=en] .cal .tag { font-size:.6rem; overflow-wrap:anywhere; }
 @media(max-width:640px) { .explorer-layout { grid-template-columns:1fr; } }
 
 /* Progressive enhancement: the original document remains usable without tabs. */
-.mobile-nav, .mobile-more, .mobile-view-title { display:none; }
+.mobile-nav, .mobile-view-title { display:none; }
 .mobile-disclosure { margin:12px 0; }
 .mobile-disclosure > summary { cursor:pointer; color:var(--muted); font-size:.85rem; padding:10px 0; }
 .shared-controls { border:1px solid var(--line); border-radius:14px; padding:0 14px; background:var(--card); }
@@ -170,12 +170,10 @@ html[lang=en] .cal .tag { font-size:.6rem; overflow-wrap:anywhere; }
   .mobile-layout-ready .view-panel:not(.is-active) { display:none; }
   .mobile-layout-ready .mobile-view-title { display:block; font-size:1.25rem; font-weight:500; color:var(--accent); margin:22px 2px 8px; }
   .mobile-layout-ready #view-tonight > .mobile-view-title { display:none; }
-  .mobile-more { display:block; margin-right:auto; min-height:44px; }
   .mobile-nav { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); position:fixed; z-index:20; bottom:0; left:0; right:0; padding:6px max(8px,env(safe-area-inset-left)) calc(6px + env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-right)); background:rgba(10,14,34,.96); backdrop-filter:blur(18px); border-top:1px solid var(--line); box-shadow:0 -8px 28px #0004; }
   .mobile-nav button { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; min-height:54px; padding:4px; border:0; border-radius:12px; background:transparent; color:var(--muted); font-size:.75rem; }
   .mobile-nav button[aria-current=page] { background:rgba(255,217,138,.1); color:var(--accent); }
   .nav-icon { font-size:1.55rem; line-height:1.1; }
-  .mobile-more[aria-current=page] { border-color:var(--accent); color:var(--accent); }
   .mobile-layout-ready h1 { font-size:1.8rem; margin:8px 0; }
   .mobile-layout-ready #clock, .mobile-layout-ready #tzInfo { font-size:.72rem; }
   .mobile-layout-ready .language-switch { font-size:.75rem; flex-wrap:wrap; }
