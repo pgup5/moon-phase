@@ -10,9 +10,9 @@ export function initializeMobileLayout() {
   const section = id => $(id).closest('section');
   const groups = {
     tonight: [document.querySelector('.hero'), section('viewingContext'), section('locName'), $('challengeCard'), section('icsBtn')],
-    plan: [section('moonPathTitle'), section('photoTitle'), $('darknessCard'), $('earthshineCard'), $('landscapePlanner')],
+    plan: [$('moonriseCamera'), section('moonPathTitle'), section('photoTitle'), $('darknessCard'), $('earthshineCard'), $('landscapePlanner')],
     explore: [section('cardDate'), $('moonExplorer'), $('neighborsCard'), $('meteorCard'), $('worldMoonCard'), $('tidesCard'), section('launches')],
-    calendar: [section('festivals'), section('calTitle'), section('viewingWeekTitle'), $('lunarEclipseCard'), section('upcoming'), section('events')],
+    calendar: [$('festivalCountdown'), section('festivals'), section('calTitle'), section('viewingWeekTitle'), $('lunarEclipseCard'), section('upcoming'), section('events')],
   };
   const names = { tonight: text('今晚', 'Tonight'), plan: text('觀測', 'Observe'), explore: text('探索', 'Explore'), calendar: text('月曆', 'Calendar') };
   const disclosure = (label, nodes, className = '') => {

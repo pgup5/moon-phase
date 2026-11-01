@@ -284,3 +284,15 @@ html[lang=en] .cal .tag { font-size:.6rem; overflow-wrap:anywhere; }
 .cal button.day { border:0; font-family:inherit; }
 .cal button.day:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
 #queryStatusText { min-width:0; overflow-wrap:anywhere; }
+
+.rise-camera-stage { position:relative; height:260px; overflow:hidden; border:1px solid var(--line); border-radius:16px; margin:14px 0; background:linear-gradient(#121a36,#344f71); }
+.rise-camera-stage video { width:100%; height:100%; object-fit:cover; }
+.rise-camera-grid { position:absolute; inset:0; background:linear-gradient(transparent 49.6%,rgba(255,255,255,.4) 50%,transparent 50.4%); pointer-events:none; }
+.rise-camera-center { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); color:white; text-shadow:0 1px 5px black; }
+.rise-camera-marker { position:absolute; top:32%; transform:translateX(-50%); padding:6px 10px; border-radius:12px; color:var(--accent); background:rgba(8,12,36,.8); white-space:nowrap; }
+.rise-camera-caption { position:absolute; bottom:10px; left:10px; right:10px; padding:5px; color:white; background:rgba(8,12,36,.7); font-size:.75rem; text-align:center; }
+#riseCameraBearing { display:block; color:var(--accent); margin:4px 0 12px; }
+#moonriseCamera .row, #festivalCountdown .row { margin-top:14px; }
+.countdown-summary { font-family:"Noto Serif TC",serif; color:var(--accent); font-size:clamp(1.5rem,5vw,2.2rem); margin:16px 0; }
+#countdownGreeting { display:block; width:100%; max-width:420px; margin-top:8px; }
+.countdown-image { display:block; width:min(360px,100%); margin:18px auto 0; border-radius:14px; }

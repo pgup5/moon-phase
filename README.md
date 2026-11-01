@@ -5,6 +5,8 @@ A Traditional Chinese moon experience that works from the visitor's current date
 Live site: https://moon-phase-psi.vercel.app
 
 ## Features
+- Observe: moonrise direction preview for the selected local date/location, with optional rear-camera video, absolute phone-orientation guidance and a manual bearing slider. Horizontal guide only: camera field of view is approximate, magnetic/true-north differences and obstructions are not corrected. Camera tracks stop when leaving Observe on mobile or hiding the page; video stays on the device. Requires HTTPS/localhost and camera permission; unavailable sensors or cameras retain manual mode.
+- Calendar: Mid-Autumn, Lantern Festival, Lunar New Year and next-full-Moon countdown cards. Counts calendar days from the selected date, retains same-day festivals, handles DST, and exports a 1080×1350 PNG with custom greeting and reference date. Lunar festivals use the UTC+8 calendar date shown as the same local civil date.
 - Calendar: next locally visible lunar eclipse, contact times/altitudes, remaining visibility for ongoing eclipses, optional umbral-only filter and time preview (Astronomy Engine, up to 10 years, 1900–2100)
 - Tonight: a phase-aware observing challenge for unaided eyes or binoculars, with completion saved on this device
 - Explore: annual meteor-shower planning references with local radiant/moonlight windows; same-instant Moon comparison for Taipei, Tokyo, Sydney, New York and the North Pole; interactive spring/neap tide explanation
@@ -72,3 +74,5 @@ Run the usability regression checks against a local server with `node tests/mobi
 Saved locations are validated; blocked or corrupt browser storage falls back to the default location without stopping startup. Failed weather requests can be retried from Tonight without reloading. Calendar dates support keyboard activation. Date selection and playback are limited to 1900–2100, with both local and UTC years checked at the boundaries.
 
 GitHub Actions runs all Node regression tests, JavaScript syntax checks and the Chrome mobile/offline checks on pushes and pull requests. Run all logic tests locally with `node --experimental-default-type=module --test tests/*.test.mjs`.
+
+Moonrise/countdown logic: `node --experimental-default-type=module --test tests/moonrise-countdown.test.mjs`. The mobile browser checks also cover camera denial, stream cleanup on navigation, late permission responses, countdown image creation and offline calculation. Phone sensor accuracy and rear-camera behavior still require physical iOS/Android checks.

@@ -1,3 +1,5 @@
+import { initMoonriseCamera } from "./moonrise-camera.js";
+import { initFestivalCountdown } from "./festival-countdown.js";
 import { readStored, writeStored, savedLocation } from "./storage.js";
 import { MIN_DATE, MAX_DATE, supportedDate } from "./date-range.js";
 import { tr, locale, initializeLanguage } from "./i18n.js";
@@ -159,6 +161,8 @@ function render(force = false) {
     if (fest && fest.name === "中秋節") setTimeout(hopRabbit, 800);
   }
 
+  if (visibleFeature("moonriseCamera")) moonriseCamera?.update(d, state.loc);
+  if (visibleFeature("festivalCountdown")) festivalCountdown?.update(d);
   mobileLayout?.update(d, state.loc.name, state.live && !state.offsetH);
   if (visibleFeature("landscapePlanner") || visibleFeature("moonExplorer")) explorationTools?.update();
   if (visibleFeature("darknessCard") || visibleFeature("neighborsCard")) nightFeatures?.update();
@@ -781,6 +785,8 @@ function visibleFeature(id) { return !mobileLayout || mobileLayout.isVisible(id)
 
 // ---------- start ----------
 let mobileLayout = null;
+let moonriseCamera = null;
+let festivalCountdown = null;
 let nightFeatures = null;
 let observingFeatures = null;
 let eclipseFeature = null;
@@ -830,6 +836,8 @@ eclipseFeature = initEclipseFeature({
     $("moonStage").scrollIntoView({ behavior: "smooth", block: "center" });
   },
 });
+moonriseCamera = initMoonriseCamera({ visible: visibleFeature });
+festivalCountdown = initFestivalCountdown({ date: target, moonSVG });
 mobileLayout = initializeMobileLayout();
 state.southern = new URLSearchParams(location.search).get("hemi") === "S";
 $("hemi").value = state.southern ? "S" : "N";

@@ -46,6 +46,19 @@ function jsonResponse(requestId,value){return send('Fetch.fulfillRequest',{reque
   assert.equal(launchRequests,launchesBefore,'launches fetched on initial Tonight view');
   assert.equal(await evaluate(`document.querySelector('#meteorChart').childElementCount`),0,'hidden meteor calculations were not deferred');
   assert.equal(await evaluate(`document.querySelector('#eclipseStatus').textContent`),'','hidden eclipse calculations were not deferred');
+  await evaluate(`document.querySelector('[data-view="plan"]').click()`);
+  await until(`document.querySelector('#riseCameraTarget').textContent.includes('°')`,'moonrise bearing');
+  await evaluate(`document.querySelector('#riseCameraFacing').value=0;document.querySelector('#riseCameraFacing').dispatchEvent(new Event('input'))`);
+  assert.equal(await evaluate(`document.querySelector('#riseCameraBearing').textContent`),'0°');
+  await evaluate(`Object.defineProperty(navigator.mediaDevices,'getUserMedia',{configurable:true,writable:true,value:async()=>{throw new DOMException('Denied','NotAllowedError')}});document.querySelector('#riseCameraStart').click()`);
+  await until(`document.querySelector('#riseCameraStatus').textContent.includes('${lang==='en'?'Manual':'手動'}')`,'camera denied fallback');
+  await evaluate(`window.qaCameraCanvas=document.createElement('canvas');qaCameraCanvas.width=320;qaCameraCanvas.height=240;qaCameraCanvas.getContext('2d').fillRect(0,0,320,240);window.qaFrame=0;window.qaFrameTimer=setInterval(()=>{qaCameraCanvas.getContext('2d').fillStyle=++qaFrame%2?'#123':'#456';qaCameraCanvas.getContext('2d').fillRect(0,0,320,240)},100);window.qaCameraStream=qaCameraCanvas.captureStream(5);navigator.mediaDevices.getUserMedia=async()=>qaCameraStream;document.querySelector('#riseCameraStart').click()`);
+  await until(`!document.querySelector('#riseCameraVideo').hidden && document.querySelector('#riseCameraStart').hidden`,'camera preview');
+  await evaluate(`document.querySelector('[data-view="calendar"]').click()`);
+  assert.equal(await evaluate(`qaCameraStream.getTracks().every(t=>t.readyState==='ended')`),true,'camera stopped after leaving Observe');
+  await evaluate(`document.querySelector('[data-view="plan"]').click();navigator.mediaDevices.getUserMedia=()=>new Promise(resolve=>window.qaResolveCamera=resolve);document.querySelector('#riseCameraStart').click();document.querySelector('#riseCameraStop').click();window.qaLateStream=qaCameraCanvas.captureStream(5);qaResolveCamera(qaLateStream)`);
+  await until(`qaLateStream.getTracks().every(t=>t.readyState==='ended')`,'late camera permission cleanup');
+  await evaluate(`clearInterval(qaFrameTimer)`);
   await evaluate(`document.querySelector('[data-view="explore"]').click()`);
   await until(`document.querySelectorAll('.world-moon-place').length===5`,'lazy Explore render');
   assert.equal(await evaluate(`document.querySelectorAll('.explore-shortcuts a').length`),7);
@@ -66,6 +79,16 @@ function jsonResponse(requestId,value){return send('Fetch.fulfillRequest',{reque
   await until(`document.querySelector('.eclipse-table tbody tr')!==null`,'lazy eclipse');
   assert.equal(await evaluate(`document.querySelector('#eclipseMore').open`),false);
   assert.equal(await evaluate(`document.querySelector('#viewingWeekMore').open`),false);
+  await until(`document.querySelector('#countdownSummary').textContent.length>5`,'countdown summary');
+  await evaluate(`document.querySelector('#countdownBuild').click()`);
+  await until(`document.querySelector('#countdownImage').naturalWidth===1080 && !document.querySelector('#countdownImage').hidden`,'countdown PNG');
+  assert.equal(await evaluate(`document.querySelector('#countdownImage').naturalWidth`),1080);
+  await evaluate(`document.querySelector('#countdownGreeting').value='Moon wishes';document.querySelector('#countdownGreeting').dispatchEvent(new Event('input'))`);
+  assert.equal(await evaluate(`document.querySelector('#countdownShare').hidden`),true,'edited card cannot share stale PNG');
+  await evaluate(`document.querySelector('#countdownKind').value='full';document.querySelector('#countdownKind').dispatchEvent(new Event('change'));document.querySelector('#countdownBuild').click()`);
+  await until(`!document.querySelector('#countdownImage').hidden`,'full Moon countdown card');
+  await screenshot(`/tmp/moon-countdown-${lang}.png`);
+
   assert.ok(await evaluate(`document.querySelector('#cal button.day[aria-label][aria-pressed]') !== null`));
   await evaluate(`document.querySelector('#cal button.day[data-d="15"]').focus()`);
   await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',text:'\r',windowsVirtualKeyCode:13});
@@ -133,5 +156,7 @@ function jsonResponse(requestId,value){return send('Fetch.fulfillRequest',{reque
  await until(`document.querySelectorAll('.world-moon-place').length===5`,'offline Explore');
  assert.ok((await evaluate(`document.querySelector('#tonightAdvice').textContent`)).length>20);
  assert.equal(exceptions.length,0,JSON.stringify(exceptions));
- console.log('PASS: geolocation, offline reload/calculations and no JavaScript exceptions');
+ await evaluate(`document.querySelector('[data-view="calendar"]').click()`);
+ await until(`document.querySelector('#countdownSummary').textContent.length>5`,'offline countdown');
+ console.log('PASS: camera lifecycle/fallback, countdown PNG, geolocation, offline calculations and no JavaScript exceptions');
 }finally{chrome.kill();}})().catch(e=>{console.error(e);process.exitCode=1;});
