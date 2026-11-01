@@ -52,7 +52,7 @@ export async function buildCard({ moonImage, svgFallback, dateText, lunarText, p
   x.fillStyle = "#e8ecff";
   x.font = '40px "Noto Serif TC","Songti TC",serif';
   if (locale === "en-US") x.font = '32px Georgia,serif';
-  const lines = locale === "en-US" ? poem.text.split(/\s+/).reduce((lines, word) => {
+  const lines = locale === "en-US" && !poem.original ? poem.text.split(/\s+/).reduce((lines, word) => {
     const last = lines.at(-1);
     if (last && x.measureText(last + " " + word).width <= 960) lines[lines.length - 1] += " " + word;
     else lines.push(word);
@@ -63,10 +63,10 @@ export async function buildCard({ moonImage, svgFallback, dateText, lunarText, p
     return acc;
   }, []);
   const top = special ? 1145 : 1125;
-  lines.slice(0, 3).forEach((l, i) => x.fillText(l, cx, top + i * 56));
+  lines.slice(0, 3).forEach((l, i) => x.fillText(l, cx, top + i * 56, 960));
   x.fillStyle = "#9aa3c7";
   x.font = '30px "Noto Sans TC","PingFang TC",sans-serif';
-  x.fillText(locale === "en-US" ? `— ${poem.author}, ${poem.title}` : `—— ${poem.author}《${poem.title}》`, cx, top + Math.min(lines.length, 3) * 56 + 8, 960);
+  x.fillText(locale === "en-US" ? `— ${poem.author}, ${poem.title}${poem.original ? " · Original Chinese" : ""}` : `—— ${poem.author}《${poem.title}》`, cx, top + Math.min(lines.length, 3) * 56 + 8, 960);
   x.fillStyle = "rgba(255,255,255,.45)";
   x.font = '24px "Noto Sans TC",sans-serif';
   x.fillText(tr("月相查詢 · moon-phase-psi.vercel.app"), cx, H - 36);

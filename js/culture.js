@@ -1,46 +1,14 @@
+import { DAILY_POEMS } from './daily-poems.js';
 import { tr, locale } from "./i18n.js";
 
-export const POEMS = [
-  [ // 新月
-    { text: "月黑雁飛高，單于夜遁逃。", author: "盧綸", title: "塞下曲" },
-    { text: "今人不見古時月，今月曾經照古人。", author: "李白", title: "把酒問月" },
-  ],
-  [ // 眉月
-    { text: "可憐九月初三夜，露似真珠月似弓。", author: "白居易", title: "暮江吟" },
-    { text: "無言獨上西樓，月如鉤。", author: "李煜", title: "相見歡" },
-  ],
-  [ // 上弦月
-    { text: "月落烏啼霜滿天，江楓漁火對愁眠。", author: "張繼", title: "楓橋夜泊" },
-    { text: "明月松間照，清泉石上流。", author: "王維", title: "山居秋暝" },
-  ],
-  [ // 盈凸月
-    { text: "床前明月光，疑是地上霜。舉頭望明月，低頭思故鄉。", author: "李白", title: "靜夜思" },
-    { text: "露從今夜白，月是故鄉明。", author: "杜甫", title: "月夜憶舍弟" },
-  ],
-  [ // 滿月
-    { text: "但願人長久，千里共嬋娟。", author: "蘇軾", title: "水調歌頭" },
-    { text: "海上生明月，天涯共此時。", author: "張九齡", title: "望月懷遠" },
-    { text: "舉杯邀明月，對影成三人。", author: "李白", title: "月下獨酌" },
-  ],
-  [ // 虧凸月
-    { text: "人有悲歡離合，月有陰晴圓缺，此事古難全。", author: "蘇軾", title: "水調歌頭" },
-    { text: "江畔何人初見月？江月何年初照人？", author: "張若虛", title: "春江花月夜" },
-  ],
-  [ // 下弦月
-    { text: "今宵酒醒何處？楊柳岸，曉風殘月。", author: "柳永", title: "雨霖鈴" },
-    { text: "春風又綠江南岸，明月何時照我還？", author: "王安石", title: "泊船瓜洲" },
-  ],
-  [ // 殘月
-    { text: "秦時明月漢時關，萬里長征人未還。", author: "王昌齡", title: "出塞" },
-    { text: "雞聲茅店月，人跡板橋霜。", author: "溫庭筠", title: "商山早行" },
-  ],
-];
-
-export function poemFor(phaseIdx, date) {
-  const list = POEMS[phaseIdx];
-  const day = Math.floor(date.getTime() / 86400000);
-  const poem = list[((day % list.length) + list.length) % list.length];
-  return { text: tr(poem.text), author: tr(poem.author), title: tr(poem.title) };
+// A civil-day index avoids UTC-midnight changes and DST-length days.
+export { DAILY_POEMS as POEMS } from './daily-poems.js';
+export function poemFor(_phaseIdx, date) {
+  const day = Math.round((Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) - Date.UTC(2026, 0, 1)) / 86400000);
+  if (!Number.isFinite(day)) throw new RangeError('Invalid poem date');
+  const poem = DAILY_POEMS[((day % DAILY_POEMS.length) + DAILY_POEMS.length) % DAILY_POEMS.length];
+  const text = tr(poem.text);
+  return { text, author: tr(poem.author), title: tr(poem.title), original: locale === 'en-US' && text === poem.text };
 }
 
 const DAY_NAMES = ["初一","初二","初三","初四","初五","初六","初七","初八","初九","初十",

@@ -40,6 +40,8 @@ function jsonResponse(requestId,value){return send('Fetch.fulfillRequest',{reque
   const launchesBefore=launchRequests;
   await send('Page.navigate',{url:`${base}?lang=${lang}&t=2026-11-12T18:00:00`});await ready();
   assert.equal(await evaluate(`document.querySelector('#poem').nextElementSibling.id`),'tonightAdvice');
+  assert.ok(await evaluate(`document.querySelector('#poemDayLabel').textContent.includes('2026')`));
+  assert.ok(await evaluate(`import('./js/culture.js').then(c=>document.querySelector('#poem').textContent.startsWith(c.poemFor(0,new Date('2026-11-12T18:00:00')).text))`));
   assert.ok((await evaluate(`document.querySelector('#tonightAdvice').textContent`)).length>20);
   assert.equal(await evaluate(`document.querySelector('#globalNowBtn').hidden`),false);
   assert.ok((await evaluate(`document.querySelector('#queryStatusText').textContent`)).includes('2026'));
@@ -174,6 +176,7 @@ function jsonResponse(requestId,value){return send('Fetch.fulfillRequest',{reque
  await evaluate(`navigator.serviceWorker.ready`);
  await until(`caches.has(${JSON.stringify(cacheVersion)})`,'offline cache');
  await until(`caches.match(new URL('js/viewing-advice.js',location.href)).then(Boolean)`,'new offline module');
+ await until(`caches.match(new URL('js/daily-poems.js',location.href)).then(Boolean)`,'offline daily poems');
  await send('Fetch.disable');
  await send('Network.emulateNetworkConditions',{offline:true,latency:0,downloadThroughput:0,uploadThroughput:0});
  await send('Page.reload');await ready();

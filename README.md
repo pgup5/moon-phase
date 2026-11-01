@@ -5,6 +5,7 @@ A Traditional Chinese moon experience that works from the visitor's current date
 Live site: https://moon-phase-psi.vercel.app
 
 ## Features
+- Daily moon poetry: 366 distinct excerpts rotate by local calendar day, independently of Moon phase, with author/title and the same date selection on birthday cards. Every consecutive 366 days is unique, including leap day. [Sources and license](data/poetry-sources.md); English mode labels untranslated excerpts as original Chinese.
 - Tonight: share a specific Moon by link, retaining its UTC instant, coordinates, hemisphere view and language. Uses native sharing, clipboard, or a selectable link fallback. Shared locations apply to the current session without overwriting saved locations; recipient times use their device time zone.
 - Observe: moonrise direction preview for the selected local date/location, with optional rear-camera video, absolute phone-orientation guidance and a manual bearing slider. Horizontal guide only: camera field of view is approximate, magnetic/true-north differences and obstructions are not corrected. Camera tracks stop when leaving Observe on mobile or hiding the page; video stays on the device. Requires HTTPS/localhost and camera permission; unavailable sensors or cameras retain manual mode.
 - Calendar: Mid-Autumn, Lantern Festival, Lunar New Year and next-full-Moon countdown cards. Counts calendar days from the selected date, retains same-day festivals, handles DST, and exports a 1080×1350 PNG with custom greeting and reference date. Lunar festivals use the UTC+8 calendar date shown as the same local civil date.
@@ -24,7 +25,7 @@ Live site: https://moon-phase-psi.vercel.app
 - Where the moon is: altitude/azimuth sky compass, moonrise/moonset, sunrise/sunset, device compass on phones
 - Seven-night viewing comparison: phases, observing windows, hourly weather, comparable scores, and links to nightly details
 - Nightly moon path: sky map, rise/set directions, highest point, and a time preview slider (local noon to next noon)
-- Chinese culture: 農曆 date, 二十四節氣, festivals (春節、元宵、端午、七夕、中元、中秋、重陽、除夕), poems by phase, 玉兔 easter egg (tap the moon 5×)
+- Chinese culture: 農曆 date, 二十四節氣, festivals (春節、元宵、端午、七夕、中元、中秋、重陽、除夕), 366 daily moon-related poetry excerpts, 玉兔 easter egg (tap the moon 5×)
 - Live sky background that follows the real Sun altitude, with parallax stars and shooting stars
 - Birthday moon share card (PNG, Web Share on mobile)
 - Supermoon / blue moon / eclipse forecasts, `.ics` full-moon reminders, installable PWA with offline support

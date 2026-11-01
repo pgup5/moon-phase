@@ -145,7 +145,8 @@ function render(force = false) {
   $("dist").textContent = tr`${Math.round(ms.distKm).toLocaleString(LOC)} 公里`;
   $("term").textContent = tr(A.currentSolarTerm(d));
   const poem = C.poemFor(idx, d);
-  $("poem").innerHTML = `${poem.text}<cite>${locale === "en-US" ? `— ${poem.author}, ${poem.title}` : `—— ${poem.author}《${poem.title}》`}</cite>`;
+  $("poemDayLabel").textContent = `${locale === "en-US" ? "Daily Moon poem" : "每日月詩"} · ${fmtDate(d)}`;
+  $("poem").innerHTML = `${poem.text}<cite>${locale === "en-US" ? `— ${poem.author}, ${poem.title}${poem.original ? " · Original Chinese" : ""}` : `—— ${poem.author}《${poem.title}》`}</cite>`;
 
   // badges & banner (once per day)
   const dk = dayKey(d);
