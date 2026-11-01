@@ -301,6 +301,3 @@ html[lang=en] .cal .tag { font-size:.6rem; overflow-wrap:anywhere; }
 .share-moon .when { font-size:.75rem; }
 #moonLinkValue { width:100%; min-width:0; }
 @media(max-width:760px) { .share-moon .row { justify-content:center; } }
-
-.poem-day { margin-top:16px; font-size:.75rem; }
-.poem-day + .poem { margin-top:6px; }

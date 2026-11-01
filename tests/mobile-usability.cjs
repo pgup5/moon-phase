@@ -40,7 +40,8 @@ function jsonResponse(requestId,value){return send('Fetch.fulfillRequest',{reque
   const launchesBefore=launchRequests;
   await send('Page.navigate',{url:`${base}?lang=${lang}&t=2026-11-12T18:00:00`});await ready();
   assert.equal(await evaluate(`document.querySelector('#poem').nextElementSibling.id`),'tonightAdvice');
-  assert.ok(await evaluate(`document.querySelector('#poemDayLabel').textContent.includes('2026')`));
+  assert.equal(await evaluate(`document.querySelector('#poemDayLabel')`),null);
+  assert.ok(await evaluate(`document.querySelector('#poem').textContent.trim().length > 0 && !!document.querySelector('#poem cite')`));
   assert.ok(await evaluate(`import('./js/culture.js').then(c=>document.querySelector('#poem').textContent.startsWith(c.poemFor(0,new Date('2026-11-12T18:00:00')).text))`));
   assert.ok((await evaluate(`document.querySelector('#tonightAdvice').textContent`)).length>20);
   assert.equal(await evaluate(`document.querySelector('#globalNowBtn').hidden`),false);
