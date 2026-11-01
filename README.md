@@ -5,6 +5,7 @@ A Traditional Chinese moon experience that works from the visitor's current date
 Live site: https://moon-phase-psi.vercel.app
 
 ## Features
+- Tonight: share a specific Moon by link, retaining its UTC instant, coordinates, hemisphere view and language. Uses native sharing, clipboard, or a selectable link fallback. Shared locations apply to the current session without overwriting saved locations; recipient times use their device time zone.
 - Observe: moonrise direction preview for the selected local date/location, with optional rear-camera video, absolute phone-orientation guidance and a manual bearing slider. Horizontal guide only: camera field of view is approximate, magnetic/true-north differences and obstructions are not corrected. Camera tracks stop when leaving Observe on mobile or hiding the page; video stays on the device. Requires HTTPS/localhost and camera permission; unavailable sensors or cameras retain manual mode.
 - Calendar: Mid-Autumn, Lantern Festival, Lunar New Year and next-full-Moon countdown cards. Counts calendar days from the selected date, retains same-day festivals, handles DST, and exports a 1080×1350 PNG with custom greeting and reference date. Lunar festivals use the UTC+8 calendar date shown as the same local civil date.
 - Calendar: next locally visible lunar eclipse, contact times/altitudes, remaining visibility for ongoing eclipses, optional umbral-only filter and time preview (Astronomy Engine, up to 10 years, 1900–2100)

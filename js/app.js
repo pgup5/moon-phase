@@ -1,3 +1,4 @@
+import { sharedLocation, initializeMoonSharing } from "./moon-link.js";
 import { initMoonriseCamera } from "./moonrise-camera.js";
 import { initFestivalCountdown } from "./festival-countdown.js";
 import { readStored, writeStored, savedLocation } from "./storage.js";
@@ -32,7 +33,7 @@ const pad = (n) => String(n).padStart(2, "0");
 const savedLoc = savedLocation();
 const state = {
   live: true, base: new Date(), offsetH: 0, southern: false, playing: false, heading: null,
-  loc: savedLoc || { lat: 25.033, lon: 121.565, name: "台北（預設位置）" },
+  loc: sharedLocation(location.search, LOC === "en-US") || savedLoc || { lat: 25.033, lon: 121.565, name: "台北（預設位置）" },
   calYear: null, calMonth: null,
 };
 const target = () => new Date((state.live ? Date.now() : state.base.getTime()) + state.offsetH * 3600000);
@@ -549,6 +550,10 @@ $("languageSelect").addEventListener("change", () => {
   url.searchParams.set("lang", selected);
   if (!state.live || state.offsetH) url.searchParams.set("t", target().toISOString());
   url.searchParams.set("hemi", state.southern ? "S" : "N");
+  if (url.searchParams.has("lat") || url.searchParams.has("lon")) {
+    url.searchParams.set("lat", state.loc.lat);
+    url.searchParams.set("lon", state.loc.lon);
+  }
   location.assign(url.href);
 });
 $("launchTz").textContent = tr`以您的時區顯示：${TZ}`;
@@ -844,6 +849,7 @@ $("hemi").value = state.southern ? "S" : "N";
 updateOffsetLabel();
 const qt = new URLSearchParams(location.search).get("t");
 if (qt && !isNaN(new Date(qt))) jumpTo(new Date(qt));
+initializeMoonSharing(() => ({ date: target(), location: state.loc, southern: state.southern, language: LOC === "en-US" ? "en" : "zh-Hant" }));
 render(true);
 if ("requestIdleCallback" in window) requestIdleCallback(startMoon3D, { timeout: 1500 });
 else setTimeout(startMoon3D, 0);

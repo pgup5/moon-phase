@@ -296,3 +296,8 @@ html[lang=en] .cal .tag { font-size:.6rem; overflow-wrap:anywhere; }
 .countdown-summary { font-family:"Noto Serif TC",serif; color:var(--accent); font-size:clamp(1.5rem,5vw,2.2rem); margin:16px 0; }
 #countdownGreeting { display:block; width:100%; max-width:420px; margin-top:8px; }
 .countdown-image { display:block; width:min(360px,100%); margin:18px auto 0; border-radius:14px; }
+
+.share-moon { margin:16px 0; }
+.share-moon .when { font-size:.75rem; }
+#moonLinkValue { width:100%; min-width:0; }
+@media(max-width:760px) { .share-moon .row { justify-content:center; } }
