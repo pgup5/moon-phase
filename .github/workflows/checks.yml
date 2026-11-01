@@ -1,0 +1,30 @@
+name: Project checks
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --experimental-default-type=module --test tests/*.test.mjs
+      - name: Check JavaScript syntax
+        run: |
+          for file in js/*.js; do node --input-type=module --check < "$file"; done
+          node --check sw.js
+      - name: Check whitespace
+        run: git diff --check
+      - name: Browser regression checks
+        timeout-minutes: 10
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/moon-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid"' EXIT
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:8765/ > /dev/null; then break; fi
+            sleep 1
+          done
+          node tests/mobile-usability.cjs

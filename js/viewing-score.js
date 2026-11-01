@@ -17,6 +17,9 @@ export function getViewingWeather(lat, lon) {
       if (!Array.isArray(hourly?.time)) throw new Error("Invalid weather data");
       return hourly.time.map((t, i) => ({ time: t * 1000,
         cloud: hourly.cloud_cover?.[i], rain: hourly.precipitation_probability?.[i] }));
+    }).catch(error => {
+      if (forecasts.get(key)?.promise === promise) forecasts.delete(key);
+      throw error;
     });
   if (forecasts.size > 20) forecasts.clear();
   forecasts.set(key, { at: Date.now(), promise });

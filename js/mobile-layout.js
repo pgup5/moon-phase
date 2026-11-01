@@ -33,7 +33,10 @@ export function initializeMobileLayout() {
   reset.id = 'globalNowBtn';
   reset.textContent = text('回到現在', 'Back to now');
   reset.onclick = () => $('nowBtn').click();
-  status.append(reset);
+  const statusText = document.createElement('span');
+  statusText.id = 'queryStatusText';
+  statusText.setAttribute('role', 'status');
+  status.append(statusText, reset);
   document.querySelector('.hero').before(status);
 
   // Keep time travel in Plan; retain the original input IDs and listeners.
@@ -189,6 +192,7 @@ export function initializeMobileLayout() {
       const dateLabel = date.toLocaleString(locale, { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
       const label = `${live ? text('即時', 'Live') : text('所選時間', 'Selected')} · ${dateLabel} · ${tr(locationName)}`;
       if ($('mobileContext').textContent !== label) $('mobileContext').textContent = label;
+      statusText.textContent = live ? '' : `${text('所選時間', 'Selected')} · ${date.toLocaleString(locale, { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })} · ${tr(locationName)}`;
       reset.hidden = live;
       status.hidden = live;
       status.classList.toggle('is-selected', !live);

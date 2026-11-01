@@ -1,3 +1,4 @@
+import { readStored, writeStored, removeStored } from "./storage.js";
 import { locale, tr } from "./i18n.js";
 
 // Upcoming launches worldwide from The Space Devs Launch Library 2 (CORS-enabled, 15 req/h without a key).
@@ -72,12 +73,12 @@ function simplify(r) {
 }
 
 function readCache() {
-  try { return JSON.parse(localStorage.getItem(KEY) || "null"); } catch { return null; }
+  try { return JSON.parse(readStored(KEY) || "null"); } catch { return null; }
 }
 
 // Returns { launches, at, stale } or throws when there is neither network nor cache.
 export async function getLaunches() {
-  localStorage.removeItem("moon.spacex");
+  removeStored("moon.spacex");
   const c = readCache();
   if (c && Date.now() - c.at < TTL) return { launches: c.launches, at: c.at, stale: false };
   try {
@@ -85,7 +86,7 @@ export async function getLaunches() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const launches = (await res.json()).results.map(simplify);
     const at = Date.now();
-    try { localStorage.setItem(KEY, JSON.stringify({ at, launches })); } catch {}
+    try { writeStored(KEY, JSON.stringify({ at, launches })); } catch {}
     return { launches, at, stale: false };
   } catch (e) {
     if (c) return { launches: c.launches, at: c.at, stale: true };

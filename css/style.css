@@ -280,3 +280,7 @@ html[lang=en] .cal .tag { font-size:.6rem; overflow-wrap:anywhere; }
   .mobile-layout-ready .language-switch select { font-size:16px; }
   .mobile-layout-ready .tonight-advice { margin:12px 0; font-size:.9rem; }
 }
+
+.cal button.day { border:0; font-family:inherit; }
+.cal button.day:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+#queryStatusText { min-width:0; overflow-wrap:anywhere; }

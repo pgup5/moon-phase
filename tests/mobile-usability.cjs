@@ -42,7 +42,7 @@ function jsonResponse(requestId,value){return send('Fetch.fulfillRequest',{reque
   assert.equal(await evaluate(`document.querySelector('#poem').nextElementSibling.id`),'tonightAdvice');
   assert.ok((await evaluate(`document.querySelector('#tonightAdvice').textContent`)).length>20);
   assert.equal(await evaluate(`document.querySelector('#globalNowBtn').hidden`),false);
-  assert.equal(await evaluate(`document.querySelector('#queryStatusText')`),null);
+  assert.ok((await evaluate(`document.querySelector('#queryStatusText').textContent`)).includes('2026'));
   assert.equal(launchRequests,launchesBefore,'launches fetched on initial Tonight view');
   assert.equal(await evaluate(`document.querySelector('#meteorChart').childElementCount`),0,'hidden meteor calculations were not deferred');
   assert.equal(await evaluate(`document.querySelector('#eclipseStatus').textContent`),'','hidden eclipse calculations were not deferred');
@@ -66,10 +66,16 @@ function jsonResponse(requestId,value){return send('Fetch.fulfillRequest',{reque
   await until(`document.querySelector('.eclipse-table tbody tr')!==null`,'lazy eclipse');
   assert.equal(await evaluate(`document.querySelector('#eclipseMore').open`),false);
   assert.equal(await evaluate(`document.querySelector('#viewingWeekMore').open`),false);
+  assert.ok(await evaluate(`document.querySelector('#cal button.day[aria-label][aria-pressed]') !== null`));
+  await evaluate(`document.querySelector('#cal button.day[data-d="15"]').focus()`);
+  await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',text:'\r',windowsVirtualKeyCode:13});
+  await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13});
+  await until(`document.querySelector('#dt').value.includes('-15T21:00')`,'keyboard calendar selection');
+  await evaluate(`document.querySelector('[data-view="calendar"]').click()`);
   assert.ok(await evaluate(`document.querySelector('#viewingWeekSummary').textContent.length>10`));
   await evaluate(`document.querySelector('#eclipseMore').open=true;document.querySelector('#viewingWeekMore').open=true;document.querySelector('[data-week-time]').click()`);
   await until(`document.querySelector('#view-tonight').classList.contains('is-active')`,'week jump');
-  assert.equal(await evaluate(`document.querySelector('#queryStatusText')`),null);
+  assert.ok((await evaluate(`document.querySelector('#queryStatusText').textContent`)).includes('2026'));
   await evaluate(`document.querySelector('#globalNowBtn').click()`);
   await until(`document.querySelector('#globalNowBtn').hidden`,'return to live');
   await until(`document.querySelector('#tonightAdvice').textContent.includes('${lang==='en'?'forecast':'天氣預報'}')`,'weather-aware advice');
@@ -102,6 +108,17 @@ function jsonResponse(requestId,value){return send('Fetch.fulfillRequest',{reque
   assert.equal((await visible()).length,4);
   console.log(`PASS ${lang}: date/reset, recommendation placement and weather, 7 shortcuts, summary disclosure, lazy work/requests, card generation, touch drag, 6 viewport sizes, reduced motion, 4x CPU, desktop`);
  }
+ await evaluate(`localStorage.setItem('moon.loc','{broken')`);
+ await send('Page.navigate',{url:base+'?lang=en'});await ready();
+ assert.ok(await evaluate(`document.querySelector('#locName').textContent.includes('25.03')`));
+ const blockedStorage=await send('Page.addScriptToEvaluateOnNewDocument',{source:`for(const area of ['localStorage','sessionStorage'])Object.defineProperty(window,area,{get(){throw new DOMException('Blocked','SecurityError')}});`});
+ await send('Page.reload');await ready();
+ assert.ok(await evaluate(`document.querySelector('#locName').textContent.includes('25.03')`));
+ await evaluate(`document.querySelector('[data-view="explore"]').click()`);
+ await until(`document.querySelector('#launchSummary').textContent.includes('QA payload')`,'launches with blocked storage');
+ await send('Page.removeScriptToEvaluateOnNewDocument',{identifier:blockedStorage.identifier});
+ await send('Page.navigate',{url:base+'?lang=en'});await ready();
+ console.log('PASS: corrupt/blocked storage startup and launch fetching');
  await send('Browser.grantPermissions',{origin:base.replace(/\/$/,''),permissions:['geolocation']},null);
  await send('Emulation.setGeolocationOverride',{latitude:35.6762,longitude:139.6503,accuracy:50});
  await evaluate(`document.querySelector('#locBtn').click()`);

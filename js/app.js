@@ -1,3 +1,5 @@
+import { readStored, writeStored, savedLocation } from "./storage.js";
+import { MIN_DATE, MAX_DATE, supportedDate } from "./date-range.js";
 import { tr, locale, initializeLanguage } from "./i18n.js";
 import * as A from "./astro.js";
 import * as C from "./culture.js";
@@ -25,7 +27,7 @@ const DAY = 86400000;
 const $ = (id) => document.getElementById(id);
 const pad = (n) => String(n).padStart(2, "0");
 
-const savedLoc = JSON.parse(localStorage.getItem("moon.loc") || "null");
+const savedLoc = savedLocation();
 const state = {
   live: true, base: new Date(), offsetH: 0, southern: false, playing: false, heading: null,
   loc: savedLoc || { lat: 25.033, lon: 121.565, name: "台北（預設位置）" },
@@ -298,6 +300,7 @@ async function renderViewingScore(d, windows, lat, lon, key) {
         + (result.forecast ? tr` · 雲量 ${result.forecast.cloud}% · 降雨機率 ${result.forecast.rain}%` : "") : tr("可切換日期，看看其他夜晚。");
     $("viewingScoreNote").textContent = note;
   };
+  $("weatherRetry").hidden = true;
   const astronomy = viewingScore(windows, lat, lon);
   if (!astronomy) { show(null, tr("無適合時段，不計分。")); return; }
   const now = Date.now();
@@ -312,9 +315,13 @@ async function renderViewingScore(d, windows, lat, lon, key) {
     const result = viewingScore(windows, lat, lon, weather);
     show(result, result.forecast ? tr("已納入賞月時段的逐時天氣預報。") : tr("僅天文評分：預報資料未完整涵蓋賞月時段。"));
   } catch {
-    show(astronomy, tr("僅天文評分：暫時無法取得天氣，請稍後重新整理。"));
+    show(astronomy, locale === "en-US" ? "Astronomy only: weather unavailable. You can retry." : "僅天文評分：暫時無法取得天氣，可按下重試。");
+    if (key === lastViewingKey) $("weatherRetry").hidden = false;
   }
 }
+
+$("weatherRetry").textContent = locale === "en-US" ? "Retry weather" : "重試天氣預報";
+$("weatherRetry").onclick = () => { lastViewingKey = ""; lastWeekKey = ""; scheduleRender(true); };
 
 // ---------- seven-night comparison ----------
 let lastWeekKey = "";
@@ -492,7 +499,7 @@ function launchCountdown(l, now) {
   return `${tr(l.status)}・${rel}`;
 }
 let launchData = null, launchesRequested = false;
-let launchFilter = localStorage.getItem("moon.launchFilter") || "all";
+let launchFilter = readStored("moon.launchFilter") || "all";
 function renderLaunches() {
   if (!launchData) return;
   const now = new Date();
@@ -515,7 +522,7 @@ $("launchFilter").addEventListener("click", (e) => {
   const b = e.target.closest("button[data-k]");
   if (!b) return;
   launchFilter = b.dataset.k;
-  localStorage.setItem("moon.launchFilter", launchFilter);
+  writeStored("moon.launchFilter", launchFilter);
   renderLaunches();
 });
 async function loadLaunches() {
@@ -533,7 +540,7 @@ async function loadLaunches() {
 }
 $("languageSelect").addEventListener("change", () => {
   const selected = $("languageSelect").value;
-  try { localStorage.setItem("moon.language", selected); } catch {}
+  writeStored("moon.language", selected);
   const url = new URL(location.href);
   url.searchParams.set("lang", selected);
   if (!state.live || state.offsetH) url.searchParams.set("t", target().toISOString());
@@ -568,7 +575,7 @@ function renderCalendar(d) {
     const fest = C.festivalOf(l);
     const isToday = dayKey(day) === dayKey(today), isSel = dayKey(day) === dayKey(d);
     const tag = fest ? `<span class="tag fest">${tr(fest.name)}</span>` : terms[i] ? `<span class="tag">${terms[i]}</span>` : marks[i] ? `<span class="tag">${locale === "en-US" ? marks[i].replace(/\s\d{2}:\d{2}$/, "") : marks[i].split(" ")[0]}</span>` : "";
-    html += `<div class="day${isToday ? " today" : ""}${isSel ? " sel" : ""}" data-d="${i}" title="${marks[i] || ""}">${i}<span class="lunar">${C.dayLabel(l)}</span>${moonSVG(ms.elong, 26, state.southern)}${tag}</div>`;
+    html += `<button type="button" aria-label="${fmtDate(day)}" aria-pressed="${isSel}" ${isToday ? 'aria-current="date"' : ""} class="day${isToday ? " today" : ""}${isSel ? " sel" : ""}" data-d="${i}" title="${marks[i] || ""}">${i}<span class="lunar">${C.dayLabel(l)}</span>${moonSVG(ms.elong, 26, state.southern)}${tag}</button>`;
   }
   $("cal").innerHTML = html;
 }
@@ -583,6 +590,7 @@ $("cal").addEventListener("click", (e) => {
 function shiftMonth(n) {
   const d = target();
   const cur = new Date(state.calYear ?? d.getFullYear(), (state.calMonth ?? d.getMonth()) + n, 1);
+  if (cur.getFullYear() < 1900 || cur.getFullYear() > 2100) return;
   state.calYear = cur.getFullYear(); state.calMonth = cur.getMonth();
   scheduleRender(true);
 }
@@ -591,6 +599,10 @@ $("nextM").onclick = () => shiftMonth(1);
 
 // ---------- time travel ----------
 function jumpTo(date) {
+  if (!supportedDate(date)) {
+    toast(locale === "en-US" ? "Choose a date within 1900–2100." : "請選擇 1900–2100 年範圍內的日期。");
+    return;
+  }
   stopPlay();
   state.live = false; state.base = date; state.offsetH = 0; $("slider").value = 0;
   state.calYear = state.calMonth = null;
@@ -600,7 +612,14 @@ function updateOffsetLabel() {
   const h = state.offsetH, sign = h > 0 ? "+" : h < 0 ? "−" : "±", a = Math.abs(h);
   $("offsetLabel").textContent = tr`${sign}${Math.floor(a / 24)} 天 ${Math.round(a % 24)} 小時`;
 }
-$("dt").addEventListener("change", () => { if ($("dt").value) jumpTo(new Date($("dt").value)); });
+$("dt").min = MIN_DATE;
+$("dt").max = MAX_DATE;
+$("cardDate").min = MIN_DATE.slice(0, 10);
+$("cardDate").max = MAX_DATE.slice(0, 10);
+$("dt").addEventListener("change", () => {
+  if ($("dt").value) jumpTo(new Date($("dt").value));
+  $("dt").value = toLocalInput(target());
+});
 $("nowBtn").onclick = () => {
   stopPlay();
   state.live = true; state.offsetH = 0; $("slider").value = 0; state.calYear = state.calMonth = null;
@@ -609,7 +628,9 @@ $("nowBtn").onclick = () => {
 $("hemi").onchange = () => { state.southern = $("hemi").value === "S"; scheduleRender(true); };
 $("slider").addEventListener("input", () => {
   if (state.live) { state.live = false; state.base = new Date(); }
-  state.offsetH = +$("slider").value; state.calYear = state.calMonth = null;
+  const offset = +$("slider").value;
+  if (!supportedDate(new Date(+state.base + offset * 3600000))) { $("slider").value = state.offsetH; return; }
+  state.offsetH = offset; state.calYear = state.calMonth = null;
   updateOffsetLabel(); scheduleRender();
 });
 let playRaf = 0, lastT = 0;
@@ -617,7 +638,9 @@ function stopPlay() { state.playing = false; cancelAnimationFrame(playRaf); $("p
 function playStep(t) {
   if (!state.playing) return;
   const dt = lastT ? Math.min(0.1, (t - lastT) / 1000) : 0; lastT = t;
-  state.offsetH += dt * 24 * +$("speed").value;
+  const nextOffset = state.offsetH + dt * 24 * +$("speed").value;
+  if (!supportedDate(new Date(+state.base + nextOffset * 3600000))) return stopPlay();
+  state.offsetH = nextOffset;
   if (state.offsetH > 720) { state.base = new Date(state.base.getTime() + state.offsetH * 3600000); state.offsetH = 0; }
   $("slider").value = state.offsetH; state.calYear = state.calMonth = null;
   updateOffsetLabel(); render();
@@ -636,7 +659,7 @@ $("locBtn").onclick = () => {
   $("locBtn").disabled = true;
   navigator.geolocation.getCurrentPosition((p) => {
     state.loc = { lat: +p.coords.latitude.toFixed(3), lon: +p.coords.longitude.toFixed(3), name: "您的位置" };
-    localStorage.setItem("moon.loc", JSON.stringify(state.loc));
+    writeStored("moon.loc", JSON.stringify(state.loc));
     $("locBtn").disabled = false; memo.clear(); scheduleRender(true); toast(tr("已更新為您的位置"));
   }, (err) => { $("locBtn").disabled = false; toast(err.code === 1 ? tr("未取得定位權限，繼續使用預設位置") : tr("無法取得位置")); }, { timeout: 10000, maximumAge: 600000 });
 };
@@ -664,6 +687,7 @@ $("cardBtn").onclick = async () => {
   $("cardBtn").disabled = true; $("cardBtn").textContent = tr("產生中…");
   try {
     const d = new Date(`${v}T21:00`);
+    if (!supportedDate(d)) return toast(locale === "en-US" ? "Choose a date within 1900–2100." : "請選擇 1900–2100 年範圍內的日期。");
     const ms = A.moonState(d), idx = A.phaseIndex(ms.elong);
     const title = $("cardTitle").value.trim();
     const special = eventsNear(d).map((e) => tr(e.kind)).join("・");
@@ -748,8 +772,8 @@ stage.addEventListener("click", () => {
   if (taps.length >= 5) { taps = []; hopRabbit(); }
 });
 const firstState = A.moonState(new Date());
-if (A.phaseIndex(firstState.elong) === 4 && !sessionStorage.getItem("moon.rabbit")) {
-  sessionStorage.setItem("moon.rabbit", "1");
+if (A.phaseIndex(firstState.elong) === 4 && !readStored("moon.rabbit", "sessionStorage")) {
+  writeStored("moon.rabbit", "1", "sessionStorage");
   setTimeout(hopRabbit, 2500);
 }
 
@@ -767,7 +791,7 @@ explorationTools = initExplorationTools({
   southern: () => state.southern,
   jump: (date, location) => {
     state.loc = { ...location, name: locale === "en-US" ? "Planned camera position" : "規劃拍攝點" };
-    localStorage.setItem("moon.loc", JSON.stringify(state.loc));
+    writeStored("moon.loc", JSON.stringify(state.loc));
     memo.clear();
     jumpTo(date);
     mobileLayout?.reveal("moonStage");

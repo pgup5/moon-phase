@@ -59,10 +59,16 @@ Local lunar-eclipse visibility uses topocentric geometric Moon-center altitude >
 
 ## Mobile usability and performance
 
-- A sticky selected-date/location indicator and a global “Back to now” button are available across tabs; date editing remains in Observe.
+- A sticky selected-date/location indicator during time travel and a global “Back to now” button are available across tabs; date editing remains in Observe.
 - Explore has seven direct section shortcuts. Meteor showers, lunar eclipses, five-city comparison, seven-night tables and launch lists show summaries before expandable details.
 - A recommendation immediately below the poem uses remaining viewing windows and the same astronomy/weather scoring basis. Past windows are excluded and missing weather is labeled.
 - Hidden mobile tabs defer their heavier calculations and launch fetching. The 3D module loads after the first render; Data Saver uses the 2D fallback. Moon/sky animations are capped at 30 fps, pause in background/hidden views, and respect reduced motion. Coarse-pointer devices cap canvas pixel ratio at 1.5. Main live updates run every 30 seconds rather than every second.
 - Browser QA uses Chrome mobile emulation, including iPhone/Android viewport sizes, touch interactions, reduced motion, offline operation and CPU throttling. Physical iOS Safari and Android devices still need a real-device check.
 
 Run the usability regression checks against a local server with `node tests/mobile-usability.cjs` (Chrome required; defaults to `http://127.0.0.1:8765/`, override with `MOON_QA_URL`). External launch/weather responses are mocked for repeatable checks. Advice logic tests: `node --experimental-default-type=module --test tests/viewing-advice.test.mjs`.
+
+## Reliability and automated checks
+
+Saved locations are validated; blocked or corrupt browser storage falls back to the default location without stopping startup. Failed weather requests can be retried from Tonight without reloading. Calendar dates support keyboard activation. Date selection and playback are limited to 1900–2100, with both local and UTC years checked at the boundaries.
+
+GitHub Actions runs all Node regression tests, JavaScript syntax checks and the Chrome mobile/offline checks on pushes and pull requests. Run all logic tests locally with `node --experimental-default-type=module --test tests/*.test.mjs`.
