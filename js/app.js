@@ -623,8 +623,6 @@ function updateOffsetLabel() {
 }
 $("dt").min = MIN_DATE;
 $("dt").max = MAX_DATE;
-$("cardDate").min = MIN_DATE.slice(0, 10);
-$("cardDate").max = MAX_DATE.slice(0, 10);
 $("dt").addEventListener("change", () => {
   if ($("dt").value) jumpTo(new Date($("dt").value));
   $("dt").value = toLocalInput(target());
@@ -688,15 +686,20 @@ $("compassBtn").onclick = async () => {
 };
 
 // ---------- birthday card ----------
-$("cardDate").value = `${new Date().getFullYear() - 20}-01-01`;
+const cardToday = new Date();
+$("cardDate").value = `${cardToday.getFullYear()}${pad(cardToday.getMonth() + 1)}${pad(cardToday.getDate())}`;
 let lastCard = null, lastCardName = "";
 $("cardBtn").onclick = async () => {
-  const v = $("cardDate").value;
-  if (!v) return toast(tr("請先選擇日期"));
+  const raw = $("cardDate").value.trim();
+  const parts = /^(\d{4})(\d{2})(\d{2})$/.exec(raw) || /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
+  const d = parts ? new Date(+parts[1], +parts[2] - 1, +parts[3], 21) : null;
+  if (!d || !supportedDate(d) || d.getFullYear() !== +parts[1] || d.getMonth() !== +parts[2] - 1 || d.getDate() !== +parts[3]) {
+    $("cardDate").focus();
+    return toast(tr("請輸入有效的 8 位數日期（YYYYMMDD），年份限 1900–2100。"));
+  }
+  const v = `${parts[1]}-${parts[2]}-${parts[3]}`;
   $("cardBtn").disabled = true; $("cardBtn").textContent = tr("產生中…");
   try {
-    const d = new Date(`${v}T21:00`);
-    if (!supportedDate(d)) return toast(locale === "en-US" ? "Choose a date within 1900–2100." : "請選擇 1900–2100 年範圍內的日期。");
     const ms = A.moonState(d), idx = A.phaseIndex(ms.elong);
     const title = $("cardTitle").value.trim();
     const special = eventsNear(d).map((e) => tr(e.kind)).join("・");

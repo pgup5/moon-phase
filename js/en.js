@@ -210,6 +210,8 @@ export default {
   "下個月": "Next month",
   "🎂 生日月亮卡片": "🎂 Birthday Moon card",
   "選一個特別的日子，看看那一晚的月亮，產生可分享的卡片。": "Choose a special date, see that night’s Moon, and create a card to share.",
+  "輸入 8 位數日期（YYYYMMDD），例如 19751005；預設為今天。": "Enter 8 digits (YYYYMMDD), e.g. 19751005. Defaults to today.",
+  "請輸入有效的 8 位數日期（YYYYMMDD），年份限 1900–2100。": "Enter a valid 8-digit date (YYYYMMDD), from 1900 to 2100.",
   "日期": "Date",
   "例如：我的生日": "e.g. My birthday",
   "標題": "Title",

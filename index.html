@@ -207,10 +207,11 @@
     <h2>🎂 生日月亮卡片</h2>
     <p class="when" style="margin-top:0">選一個特別的日子，看看那一晚的月亮，產生可分享的卡片。</p>
     <div class="row">
-      <input type="date" id="cardDate" aria-label="日期">
+      <input type="text" id="cardDate" inputmode="numeric" maxlength="10" placeholder="YYYYMMDD" aria-label="日期" aria-describedby="cardDateHint">
       <input type="text" id="cardTitle" placeholder="例如：我的生日" maxlength="16" aria-label="標題">
       <button class="primary" id="cardBtn">產生卡片</button>
     </div>
+    <p class="when" id="cardDateHint">輸入 8 位數日期（YYYYMMDD），例如 19751005；預設為今天。</p>
     <div class="card-out" id="cardOut">
       <img id="cardImg" alt="月亮卡片">
       <div class="row" style="justify-content:center;margin-top:10px"><button class="primary" id="shareBtn">分享 / 下載</button></div>
