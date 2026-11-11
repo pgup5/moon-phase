@@ -78,3 +78,48 @@ Saved locations are validated; blocked or corrupt browser storage falls back to 
 GitHub Actions runs all Node regression tests, JavaScript syntax checks and the Chrome mobile/offline checks on pushes and pull requests. Run all logic tests locally with `node --experimental-default-type=module --test tests/*.test.mjs`.
 
 Moonrise/countdown logic: `node --experimental-default-type=module --test tests/moonrise-countdown.test.mjs`. The mobile browser checks also cover camera denial, stream cleanup on navigation, late permission responses, countdown image creation and offline calculation. Phone sensor accuracy and rear-camera behavior still require physical iOS/Android checks.
+
+
+## Static deployment at root or `/moon/`
+
+Serve the repository contents from the app directory, with directory URLs ending
+in `/` (for example `/moon/`). The same files support root deployment on Vercel;
+no build step or runtime server is needed. Keep query strings when redirecting a
+directory URL to its trailing-slash form. The host must serve JavaScript, the
+manifest and `sw.js` as static files with appropriate MIME types.
+
+The manifest resolves `start_url`, `scope` and icons relative to its own URL.
+Worker registration and lunar textures resolve relative to their ES modules.
+The worker precaches app-local URLs, including the Apple touch icon, and serves
+query-bearing app URLs offline without changing `t`, `lat`, `lon`, `hemi` or
+`lang`. Weather, launches and optional map tiles still require network access
+(or their existing data caches).
+
+Cache names use `moon-phase:<registration scope>:<version>`. Activation removes
+only older caches with the same scope prefix, preserving other apps and other
+Moon deployments on the origin. Old `moon-v*` caches are deliberately retained:
+the legacy name does not identify which deployment owns it. Installation must
+complete precaching before `skipWaiting`; successful updates retain the existing
+immediate activation/client-claim behavior without forcing a page reload. Bump
+the worker cache version when changing the precached application assets.
+
+PWA regression checks for both paths run with the other Node tests:
+
+```sh
+node --experimental-default-type=module --test tests/*.test.mjs
+```
+
+For the full Chrome suite, run a static server at the repository root and use
+`node tests/mobile-usability.cjs`. To test the subpath without changing deployment
+configuration, make a temporary parent directory containing a `moon` symlink to
+this repository, serve that parent directory, and run:
+
+```sh
+MOON_QA_URL=http://127.0.0.1:8766/moon/ node tests/mobile-usability.cjs
+```
+
+The browser suite checks manifest resolution, worker scope, share-link paths,
+and offline navigation/reload with the shared parameters, in addition to the
+existing feature and mobile checks. Real-device home-screen installation still
+needs an iOS/Android check. Hosting configuration and deployment workflows are
+unchanged.

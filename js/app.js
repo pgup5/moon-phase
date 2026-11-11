@@ -755,7 +755,7 @@ $("installBtn").onclick = async () => {
 };
 const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
 if (!standalone && /iPhone|iPad|iPod/.test(navigator.userAgent)) $("installHint").textContent = tr("iPhone / iPad：點「分享」→「加入主畫面」即可安裝");
-if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register("sw.js").catch(() => {});
+if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register(new URL("../sw.js", import.meta.url), { scope: new URL("../", import.meta.url).href }).catch(() => {});
 
 // ---------- 玉兔 easter egg ----------
 const RABBIT = `<svg viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg"><g fill="#fff">

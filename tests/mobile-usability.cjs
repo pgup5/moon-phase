@@ -14,7 +14,8 @@ async function screenshot(path){const r=await send('Page.captureScreenshot',{for
 async function visible(){return evaluate(`Array.from(document.querySelectorAll('.view-panel')).filter(p=>getComputedStyle(p).display!=='none').map(p=>p.id)`);}
 
 const base=process.env.MOON_QA_URL||'http://127.0.0.1:8765/';
-const cacheVersion=fs.readFileSync(require('node:path').join(__dirname,'..','sw.js'),'utf8').match(/const CACHE = "([^"]+)"/)[1];
+const cacheSuffix=fs.readFileSync(require('node:path').join(__dirname,'..','sw.js'),'utf8').match(/const CACHE = `\$\{CACHE_PREFIX\}([^`]+)`/)[1];
+const cacheVersion=`moon-phase:${new URL(base).href}:${cacheSuffix}`;
 let launchRequests=0;
 async function until(expression,label){for(let i=0;i<150;i++){if(await evaluate(expression))return;await delay(100);}throw Error('Timed out: '+label);}
 function jsonResponse(requestId,value){return send('Fetch.fulfillRequest',{requestId,responseCode:200,responseHeaders:[{name:'Content-Type',value:'application/json'},{name:'Access-Control-Allow-Origin',value:'*'}],body:Buffer.from(JSON.stringify(value)).toString('base64')});}
@@ -104,6 +105,18 @@ function jsonResponse(requestId,value){return send('Fetch.fulfillRequest',{reque
   assert.ok((await evaluate(`document.querySelector('#queryStatusText').textContent`)).includes('2026'));
   await evaluate(`document.querySelector('#globalNowBtn').click()`);
   await until(`document.querySelector('#globalNowBtn').hidden`,'return to live');
+  // New-moon nights can correctly have no viewing advice. Select a real
+  // upcoming window so this weather assertion is independent of today's phase.
+  await evaluate(`import('./js/astro.js').then(A=>{
+   for(let day=1;day<14;day++){
+    const date=new Date();date.setDate(date.getDate()+day);date.setHours(12,0,0,0);
+    const window=A.viewingWindows(date,25.033,121.565)[0];if(!window)continue;
+    const selected=new Date(+window.start-60000);
+    const local=new Date(+selected-selected.getTimezoneOffset()*60000).toISOString().slice(0,16);
+    document.querySelector('#dt').value=local;document.querySelector('#dt').dispatchEvent(new Event('change'));return;
+   }
+   throw Error('No upcoming viewing window for weather check');
+  })`);
   await until(`document.querySelector('#tonightAdvice').textContent.includes('${lang==='en'?'forecast':'天氣預報'}')`,'weather-aware advice');
   for(const [width,height] of [[320,568],[360,800],[390,844],[412,915],[430,932],[844,390]]){
    await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:true});
@@ -157,6 +170,9 @@ function jsonResponse(requestId,value){return send('Fetch.fulfillRequest',{reque
  assert.equal(moonURL.searchParams.get('lon'),'151.2093');
  assert.equal(moonURL.searchParams.get('hemi'),'S');
  assert.equal(moonURL.hash,'#tonight');
+ assert.equal(moonURL.origin,new URL(base).origin);
+ assert.equal(moonURL.pathname,new URL(base).pathname);
+ assert.equal(moonURL.searchParams.get('lang'),'en');
  await evaluate(`navigator.clipboard.writeText=async()=>{throw Error('Denied')};document.querySelector('#copyMoonLink').click()`);
  await until(`!document.querySelector('#moonLinkValue').hidden`,'manual copy fallback');
  assert.equal(await evaluate(`document.querySelector('#moonLinkValue').value`),moonURL.href);
@@ -170,17 +186,27 @@ function jsonResponse(requestId,value){return send('Fetch.fulfillRequest',{reque
  await send('Page.navigate',{url:base+'?lang=en'});await ready();
  console.log('PASS: shared instant/location/hemisphere roundtrip, clipboard/manual fallback, native sharing and cancellation');
 
- await send('Browser.grantPermissions',{origin:base.replace(/\/$/,''),permissions:['geolocation']},null);
+ await send('Browser.grantPermissions',{origin:new URL(base).origin,permissions:['geolocation']},null);
  await send('Emulation.setGeolocationOverride',{latitude:35.6762,longitude:139.6503,accuracy:50});
  await evaluate(`document.querySelector('#locBtn').click()`);
  await until(`document.querySelector('#locName').textContent.includes('35.68')`,'geolocation update');
  await evaluate(`navigator.serviceWorker.ready`);
+ await until(`!!navigator.serviceWorker.controller`,'worker controls page');
+ assert.equal(await evaluate(`navigator.serviceWorker.getRegistration().then(r=>r.scope)`),new URL(base).href);
+ const manifest=await evaluate(`fetch(new URL('manifest.webmanifest',location.href)).then(r=>r.json())`);
+ for(const key of ['start_url','scope'])assert.equal(new URL(manifest[key],new URL('manifest.webmanifest',base)).href,new URL(base).href);
+ await evaluate(`caches.open('unrelated-site-cache').then(c=>c.put(new URL('/unrelated',location.origin),new Response('keep'))) `);
  await until(`caches.has(${JSON.stringify(cacheVersion)})`,'offline cache');
  await until(`caches.match(new URL('js/viewing-advice.js',location.href)).then(Boolean)`,'new offline module');
  await until(`caches.match(new URL('js/daily-poems.js',location.href)).then(Boolean)`,'offline daily poems');
  await send('Fetch.disable');
  await send('Network.emulateNetworkConditions',{offline:true,latency:0,downloadThroughput:0,uploadThroughput:0});
+ await send('Page.navigate',{url:moonURL.href});await ready();
+ assert.equal(await evaluate(`location.href`),moonURL.href);
+ assert.ok(await evaluate(`document.querySelector('#locName').textContent.includes('33.87°S')`));
+ assert.equal(await evaluate(`document.querySelector('#hemi').value`),'S');
  await send('Page.reload');await ready();
+ assert.equal(await evaluate(`caches.has('unrelated-site-cache')`),true);
  await evaluate(`document.querySelector('[data-view="explore"]').click()`);
  await until(`document.querySelectorAll('.world-moon-place').length===5`,'offline Explore');
  assert.ok((await evaluate(`document.querySelector('#tonightAdvice').textContent`)).length>20);

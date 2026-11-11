@@ -5,7 +5,7 @@ function loadTextures() {
   if (!texturesPromise) {
     const loader = new THREE.TextureLoader();
     const load = (url) => new Promise((res, rej) => loader.load(url, res, undefined, rej));
-    texturesPromise = Promise.all([load("textures/moon_color_2k.jpg"), load("textures/moon_disp_1k.jpg")]).then(([map, bump]) => {
+    texturesPromise = Promise.all([load(new URL("../textures/moon_color_2k.jpg", import.meta.url).href), load(new URL("../textures/moon_disp_1k.jpg", import.meta.url).href)]).then(([map, bump]) => {
       map.colorSpace = THREE.SRGBColorSpace;
       map.anisotropy = 8;
       return { map, bump };
